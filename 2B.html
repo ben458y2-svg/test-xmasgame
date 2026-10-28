@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>第2章・星光的方向</title>
+<style>
+:root{--bg:#0b0a1a;--ink:#f6ecd2;--gold:#ffcf6b;--ice:#8fd8ff;--panel:rgba(14,12,36,.9)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overscroll-behavior:none;touch-action:none;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+#g{position:relative;container-type:size;width:min(100vw,calc(100dvh*9/16));height:min(100dvh,calc(100vw*16/9));overflow:hidden;background:#000}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 2cqw) 4cqw 0;font-size:3.6cqw;display:flex;justify-content:space-between;text-shadow:0 .4cqw 0 #000}
+.top b{color:var(--ice);letter-spacing:.12em}
+#pw{position:absolute;left:4cqw;right:4cqw;top:calc(env(safe-area-inset-top,0px) + 10cqw);font-size:3.2cqw}
+#pb{height:2.4cqw;background:#241f4a;border-radius:1.2cqw;overflow:hidden;margin-top:1cqw;border:.3cqw solid #4a4380}
+#pf{height:100%;width:0;background:linear-gradient(90deg,var(--ice),#fff6c8)}
+#dots{display:flex;gap:2.5cqw;margin-top:2cqw}
+#dots i{width:5cqw;height:5cqw;border-radius:50%;background:#2a2450;border:.4cqw solid #4a4380;transition:.2s}
+#dots i.on{background:var(--gold);border-color:#fff6c8;box-shadow:0 0 2.5cqw var(--gold)}
+#dl{position:absolute;left:3cqw;right:3cqw;bottom:calc(env(safe-area-inset-bottom,0px) + 3cqw);background:var(--panel);border:.5cqw solid var(--ice);border-radius:2.5cqw;padding:3cqw 4cqw;font-size:4cqw;line-height:1.55;min-height:17cqw}
+button{font:inherit;color:#16122e;background:var(--ice);border:0;border-radius:999px;padding:2.4cqw 7cqw;font-size:4.2cqw;font-weight:700;box-shadow:0 0 3cqw var(--ice)}
+.ov{position:absolute;inset:0;background:rgba(8,6,24,.82);display:none;flex-direction:column;align-items:center;justify-content:center;gap:4cqw;padding:8cqw;text-align:center;font-size:4.2cqw;line-height:1.6}
+.ov h2{margin:0;color:var(--ice);font-size:6cqw}
+.card{background:#1c1840;border:.5cqw dashed var(--gold);border-radius:3cqw;padding:3.5cqw 5cqw;font-size:3.8cqw;animation:fly 2.4s ease-in-out infinite}
+@keyframes fly{50%{transform:translateY(-2.5cqw) rotate(-2deg)}}
+.hint{font-size:3.4cqw;opacity:.8}
+.rot{position:fixed;inset:0;background:#0b0a1a;display:none;align-items:center;justify-content:center;font-size:5vmin;z-index:9}
+@media (orientation:landscape) and (max-height:500px){.rot{display:flex}}
+</style>
+</head>
+<body>
+<div id="g">
+<canvas id="c" width="180" height="320"></canvas>
+<div class="top"><span>第2章　看不見的幫助</span><b>天使｜星光的方向</b></div>
+<div id="pw"><span id="pl">星光提示完成度 0%</span><div id="pb"><div id="pf"></div></div><div id="dots"><i></i><i></i><i></i><i></i></div></div>
+<div id="dl"></div>
+<div class="ov" id="intro" style="display:flex"><h2>星光的方向</h2>
+<div class="card">📜 收到【星象方位圖】<br><small>來自：博士　→　用途：製作星光提示</small></div>
+<div>博士們在下方來回走動。<br><b>左右拖曳</b>移動星光，讓四位博士<b>一直留在光裡</b>。</div>
+<button id="go">開始</button><div class="hint">桌機可用 ← → 鍵</div></div>
+<div class="ov" id="win"><h2>每一道提示都對準了</h2>
+<div class="card">✨ <b>星光提示</b><br><small>已送往【博士】，將在第【3】章派上用場</small></div>
+<div id="st"></div><button id="rb">再玩一次</button></div>
+</div>
+<div class="rot">請將手機轉為直向</div>
+<script>
+const $=i=>document.getElementById(i),cv=$('c'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+let sd=9;const r=()=>(sd=sd*16807%2147483647)/2147483647;
+const P=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x|0,y|0,w,h)},p=(x,y,w,h,c)=>P(ctx,x,y,w,h,c);
+const gy=268,HW=33;
+// static background
+const bg=document.createElement('canvas');bg.width=180;bg.height=320;const g=bg.getContext('2d');
+['#0b0928','#120f3c','#1a1452','#26195f','#341f68','#432670','#552e72'].forEach((c,i)=>P(g,0,i*30,180,31,c));
+for(let i=0;i<110;i++)P(g,r()*180,r()*190,1,1,r()>.7?'#fff':'#a8a2f0');
+P(g,0,250,180,70,'#241c34');P(g,0,252,180,26,'#4a3a40');
+for(let i=0;i<220;i++)P(g,r()*180,252+r()*26,2,1,r()>.5?'#3a2c32':'#5e4a4c');
+for(let i=0;i<160;i++)P(g,r()*180,280+r()*40,2,2,r()>.5?'#1c1628':'#2e2440');
+P(g,0,250,180,2,'#6a5258');
+const hill=(c,b,a1,a2,f,off)=>{for(let x=0;x<180;x++)P(ctx,x,b+Math.sin((x+off)*f)*a1+Math.sin((x+off)*f*2.7)*a2,1,320,c)};
+// game
+const COLS=[['#a8323c','#802028'],['#6a3fb0','#4c2a88'],['#1f8a8a','#166464'],['#c9962a','#a07818']];
+const dim=h=>{const n=parseInt(h.slice(1),16),m=[20,16,46],o=[n>>16,n>>8&255,n&255].map((v,i)=>(v*.45+m[i]*.55)|0);return'#'+o.map(v=>v.toString(16).padStart(2,'0')).join('')};
+const M=[{o:-27,w:1.1,f:0},{o:-9,w:.8,f:2},{o:9,w:1.3,f:4},{o:27,w:.95,f:1}];
+const CS=[[22,34],[46,50],[74,30],[104,52],[132,32],[158,48]];
+let ph='intro',T=0,prog=0,lx=90,tx=90,ax=90,out=0,last=0,drag=null,dm=[0,0,0,0],lg='',keys={};
+function say(s){if(lg!=s){lg=s;$('dl').innerHTML=s}}
+function start(){ph='play';prog=0;out=0;lx=tx=ax=90;$('intro').style.display=$('win').style.display='none';say('天使：「星象圖指出了觀測到的方向。」')}
+$('go').onclick=start;$('rb').onclick=start;
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,o:tx};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!drag)return;const b=cv.getBoundingClientRect();tx=Math.max(14,Math.min(166,drag.o+(e.clientX-drag.x)/b.width*180*1.25))});
+cv.addEventListener('pointerup',()=>drag=null);
+addEventListener('keydown',e=>keys[e.key]=1);addEventListener('keyup',e=>keys[e.key]=0);
+function body(x,rb,sh,top,sk){p(x-3,-26,6,2,top);p(x-3,-25,6,5,sk);p(x-2,-23,1,1,'#222');p(x+1,-23,1,1,'#222');p(x-4,-20,8,18,rb);p(x+1,-20,3,18,sh);p(x-5,-19,2,9,rb);p(x+3,-19,2,9,sh);p(x-5,-10,2,2,sk);p(x+3,-10,2,2,sk);p(x-3,-2,3,2,'#2a1a10');p(x+1,-2,3,2,'#2a1a10')}
+function magus(x,i,lit){const[a,b]=COLS[i],f=lit?(z=>z):dim,bob=lit?Math.abs(Math.sin(T*6+i))*-1.5:0;
+ ctx.save();ctx.translate(x,gy+bob);ctx.scale(1.2,1.2);body(0,f(a),f(b),f('#ffcf3a'),f('#e0a878'));p(-3,-30,1,2,f('#ffcf3a'));p(-1,-30,2,2,f('#ffcf3a'));p(2,-30,1,2,f('#ffcf3a'));
+ if(!lit){ctx.fillStyle='#fff';ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.fillText('?',0,-34)}ctx.restore()}
+function angel(x,y,t){const fl=Math.sin(t*7)*5;ctx.save();ctx.translate(x,y);ctx.scale(1.35,1.35);
+ ctx.globalCompositeOperation='lighter';const gr=ctx.createRadialGradient(0,-14,2,0,-14,34);gr.addColorStop(0,'rgba(180,230,255,.55)');gr.addColorStop(1,'rgba(180,230,255,0)');ctx.fillStyle=gr;ctx.fillRect(-36,-52,72,72);ctx.globalCompositeOperation='source-over';
+ p(-20,-30+fl,13,14,'#e8f4ff');p(-26,-26+fl,7,10,'#cfe8ff');p(-30,-22+fl,5,6,'#b0d4ff');p(7,-30+fl,13,14,'#e8f4ff');p(19,-26+fl,7,10,'#cfe8ff');p(25,-22+fl,5,6,'#b0d4ff');
+ body(0,'#fff','#d6e4ff','#ffe9a0','#f0c8a0');p(-4,-33,8,1,'#ffe36a');p(-5,-32,1,2,'#ffe36a');p(4,-32,1,2,'#ffe36a');p(6,-12,3,3,'#fff6c8');ctx.restore()}
+function frame(t){
+ const dt=Math.min(.05,(t-last)/1000||0);last=t;
+ if(keys.ArrowLeft)tx=Math.max(14,tx-110*dt);if(keys.ArrowRight)tx=Math.min(166,tx+110*dt);
+ lx+=(tx-lx)*Math.min(1,dt*14);ax+=(lx-ax)*Math.min(1,dt*8);
+ const sp=1+prog/100*.7;T+=dt*sp*(ph=='play'?1:.5);
+ const c=90+46*Math.sin(T*.55)+24*Math.sin(T*1.25+1);
+ const mx=M.map(m=>Math.max(12,Math.min(168,c+m.o+9*Math.sin(T*m.w*1.4+m.f))));
+ const lit=mx.map(x=>Math.abs(x-lx)<HW),all=lit.every(Boolean);
+ if(ph=='play'){prog=Math.max(0,Math.min(100,prog+(all?7:-3.5)*dt));out=all?0:out+dt;
+  if(out>1.2)say('天使同伴：「有人跑出光外了！」');else if(all&&prog>45)say('天使同伴：「我們要把它變成路上看得懂的提示。」');else if(all&&lg.includes('跑出'))say('天使：「讓光清楚，不讓旅人迷路。」');
+  if(prog>=100){ph='win';say('天使同伴：「每一道提示都對準了。」<br>天使：「將它交給正在尋找方向的博士們。」');$('win').style.display='flex'}}
+ lit.forEach((v,i)=>{if(dm[i]!=v){dm[i]=v;$('dots').children[i].classList.toggle('on',v)}});
+ $('pf').style.width=prog+'%';$('pl').textContent='星光提示完成度 '+(prog|0)+'%';
+ ctx.drawImage(bg,0,0);
+ // constellation
+ const n=Math.floor(prog/100*6+.001);CS.forEach(([x,y],i)=>{if(i<n){if(i>0){const[a,b]=CS[i-1];ctx.strokeStyle='rgba(255,240,170,.7)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a+.5,b+.5);ctx.lineTo(x+.5,y+.5);ctx.stroke()}p(x-1,y-1,3,3,'#fff6c8');p(x,y-4,1,9,'#ffe9a0');p(x-4,y,9,1,'#ffe9a0')}else p(x,y,2,2,'#6a64a8')});
+ hill('#2a2060',226,10,4,.03,T*5);hill('#1c1648',242,7,3,.05,T*9);
+ // light
+ ctx.globalCompositeOperation='lighter';const al=.22+(all?.14:0)+Math.sin(T*9)*.02;
+ const lg2=ctx.createLinearGradient(0,ax*0+90,0,gy);lg2.addColorStop(0,`rgba(255,240,170,${al+.12})`);lg2.addColorStop(1,`rgba(255,220,120,${al})`);
+ ctx.fillStyle=lg2;ctx.beginPath();ctx.moveTo(ax-6,96);ctx.lineTo(ax+6,96);ctx.lineTo(lx+HW+3,gy+2);ctx.lineTo(lx-HW-3,gy+2);ctx.fill();
+ const eg=ctx.createRadialGradient(lx,gy,2,lx,gy,HW+8);eg.addColorStop(0,'rgba(255,230,140,.55)');eg.addColorStop(1,'rgba(255,230,140,0)');
+ ctx.save();ctx.translate(lx,gy);ctx.scale(1,.25);ctx.translate(-lx,-gy);ctx.fillStyle=eg;ctx.fillRect(lx-45,gy-45,90,90);ctx.restore();ctx.globalCompositeOperation='source-over';
+ mx.forEach((x,i)=>magus(x,i,lit[i]));
+ angel(ax,112+Math.sin(T*2)*3,T);
+ ctx.globalCompositeOperation='lighter';mx.forEach((x,i)=>{if(lit[i])for(let k=0;k<3;k++){const q=(T*1.6+k/3+i*.2)%1;ctx.fillStyle=`rgba(255,235,150,${1-q})`;ctx.fillRect((x+Math.sin(q*9+k)*6)|0,(gy-34-q*20)|0,2,2)}});ctx.globalCompositeOperation='source-over';
+ if(ph=='play'&&!drag&&T<3){ctx.fillStyle='rgba(255,255,255,.85)';ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.fillText('◀ 左右拖曳 ▶',ax,160)}
+ requestAnimationFrame(frame)}
+say('');requestAnimationFrame(frame);
+</script>
+</body>
+</html>

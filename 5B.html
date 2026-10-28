@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>第5章・榮耀的宣告</title>
+<style>
+:root{--bg:#0b0a1a;--ink:#f4f8ff;--ice:#8fd8ff;--gold:#ffe08a;--panel:rgba(12,16,40,.9)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overscroll-behavior:none;touch-action:none;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+#g{position:relative;container-type:size;width:min(100vw,calc(100dvh*9/16));height:min(100dvh,calc(100vw*16/9));overflow:hidden;background:#000}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 2cqw) 4cqw 0;font-size:3.6cqw;display:flex;justify-content:space-between;text-shadow:0 .4cqw 0 #000}
+.top b{color:var(--ice);letter-spacing:.1em}
+#rd{position:absolute;left:4cqw;right:4cqw;top:calc(env(safe-area-inset-top,0px) + 10cqw);display:flex;gap:2cqw;align-items:center;font-size:3.2cqw}
+#rd i{width:6cqw;height:6cqw;border-radius:50%;background:#1c2250;border:.4cqw solid #4a5aa0;transition:.25s}
+#rd i.on{border-color:var(--gold);background:#3a3410;box-shadow:0 0 2.5cqw var(--gold)}
+#rd i.ok{background:var(--gold);border-color:#fff}
+#pb{flex:1;height:2.2cqw;background:#1c2250;border-radius:1.2cqw;overflow:hidden;border:.3cqw solid #4a5aa0}
+#pf{height:100%;width:0;background:linear-gradient(90deg,var(--ice),var(--gold))}
+#mt{position:absolute;right:3cqw;top:calc(env(safe-area-inset-top,0px) + 18cqw);font-size:4cqw;background:var(--panel);border:.4cqw solid #4a5aa0;border-radius:999px;padding:1cqw 2.5cqw}
+#fl{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:8cqw;font-weight:900;color:#fff6c8;text-shadow:0 0 4cqw var(--gold),0 .8cqw 0 #000;opacity:0;pointer-events:none;transition:opacity .25s}
+#dl{position:absolute;left:3cqw;right:3cqw;bottom:calc(env(safe-area-inset-bottom,0px) + 3cqw);background:var(--panel);border:.5cqw solid var(--ice);border-radius:2.5cqw;padding:3cqw 4cqw;font-size:3.9cqw;line-height:1.55;min-height:17cqw;pointer-events:none}
+button{font:inherit;color:#0c1230;background:var(--ice);border:0;border-radius:999px;padding:2.4cqw 7cqw;font-size:4.2cqw;font-weight:700;box-shadow:0 0 3cqw var(--ice)}
+.ov{position:absolute;inset:0;background:rgba(6,8,26,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;text-align:center;font-size:4.1cqw;line-height:1.6}
+.ov h2{margin:0;color:var(--ice);font-size:6cqw}
+.card{background:#1a2050;border:.5cqw dashed var(--gold);border-radius:3cqw;padding:3.5cqw 5cqw;font-size:3.8cqw;animation:fly 2.4s ease-in-out infinite}
+@keyframes fly{50%{transform:translateY(-2.5cqw) rotate(-2deg)}}
+.hint{font-size:3.2cqw;opacity:.8}
+.rot{position:fixed;inset:0;background:#0b0a1a;display:none;align-items:center;justify-content:center;font-size:5vmin;z-index:9}
+@media (orientation:landscape) and (max-height:500px){.rot{display:flex}}
+</style>
+</head>
+<body>
+<div id="g">
+<canvas id="c" width="180" height="320"></canvas>
+<div class="top"><span>第5章　降臨</span><b>天使｜榮耀的宣告</b></div>
+<div id="rd"><i></i><i></i><i></i><div id="pb"><div id="pf"></div></div></div>
+<div id="mt">🔊</div>
+<div id="fl"></div>
+<div id="dl"></div>
+<div class="ov" id="intro" style="display:flex"><h2>榮耀的宣告</h2>
+<div class="card">✨ 收到【降生事件】<br><small>來自：約瑟與瑪利亞　→　解鎖天使第5章</small></div>
+<div>光點從天而降，在它落到<b>光環</b>時<b>點擊該欄</b>。<br>共<b>三輪</b>宣告，完成後送出報喜信息卡。</div>
+<div class="hint">建議開啟聲音｜點擊會奏出音符｜漏拍不扣分</div><button id="go">開始宣告</button></div>
+<div class="ov" id="win"><h2>喜訊已宣告</h2>
+<div class="card">💌 <b>報喜信息卡</b><br><small>已正式送達【牧羊人】，解鎖牧羊人第5章</small></div>
+<div id="st" class="hint"></div><button id="rb">再玩一次</button></div>
+</div>
+<div class="rot">請將手機轉為直向</div>
+<script>
+const $=i=>document.getElementById(i),cv=$('c'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+let sd=6;const r=()=>(sd=sd*16807%2147483647)/2147483647;
+const P=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x|0,y|0,Math.max(1,w|0),Math.max(1,h|0))},p=(x,y,w,h,c)=>P(ctx,x,y,w,h,c);
+// audio
+let ac=null,mute=false;const NOTE=[523.25,587.33,659.25,783.99];
+const clock=()=>ac?ac.currentTime:performance.now()/1000;
+function bell(f,t,v=.22){if(!ac||mute)return;[1,2.01].forEach((m,k)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f*m;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v/(k+1),t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+.9);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+1)})}
+function kick(t){if(!ac||mute)return;const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(42,t+.14);g.gain.setValueAtTime(.45,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.22)}
+function hat(t){if(!ac||mute)return;const n=ac.sampleRate*.04,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();f.type='highpass';f.frequency.value=6500;g.gain.value=.07;s.buffer=b;s.connect(f).connect(g).connect(ac.destination);s.start(t)}
+$('mt').onclick=()=>{mute=!mute;$('mt').textContent=mute?'🔇':'🔊'};
+// bg
+const bg=document.createElement('canvas');bg.width=180;bg.height=320;const g=bg.getContext('2d');
+['#080626','#0e0a3a','#16104e','#201662','#2c1c70','#3a2478','#4a2c7c'].forEach((c,i)=>P(g,0,i*46,180,47,c));
+for(let i=0;i<130;i++)P(g,r()*180,r()*230,1,1,r()>.7?'#fff':'#a8a2f0');
+for(let x=0;x<180;x++){P(g,x,262+Math.sin(x*.035)*6+Math.sin(x*.12)*2,1,60,'#1a1438');P(g,x,276+Math.sin(x*.05+2)*5,1,50,'#120e2c')}
+const SK='#e0a878';
+function body(x,rb,sh,top){p(x-3,-26,6,2,top);p(x-3,-25,6,5,SK);p(x-2,-23,1,1,'#222');p(x+1,-23,1,1,'#222');p(x-4,-20,8,18,rb);p(x+1,-20,3,18,sh);p(x-5,-19,2,9,rb);p(x+3,-19,2,9,sh);p(x-3,-2,3,2,'#2a1a10');p(x+1,-2,3,2,'#2a1a10')}
+function angel(x,y,s,t,pl){const fl=Math.sin(t*5)*4+pl*3;ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+ ctx.globalCompositeOperation='lighter';const gr=ctx.createRadialGradient(0,-14,2,0,-14,36);gr.addColorStop(0,`rgba(190,230,255,${.4+pl*.3})`);gr.addColorStop(1,'rgba(190,230,255,0)');ctx.fillStyle=gr;ctx.fillRect(-38,-52,76,76);ctx.globalCompositeOperation='source-over';
+ p(-20,-30+fl,13,14,'#e8f4ff');p(-26,-26+fl,7,10,'#cfe8ff');p(-30,-22+fl,5,6,'#b0d4ff');p(7,-30+fl,13,14,'#e8f4ff');p(19,-26+fl,7,10,'#cfe8ff');p(25,-22+fl,5,6,'#b0d4ff');
+ body(0,'#fff','#d6e4ff','#ffe9a0');p(-4,-33,8,1,'#ffe36a');p(-5,-32,1,2,'#ffe36a');p(4,-32,1,2,'#ffe36a');ctx.restore()}
+function shep(x,y,s){ctx.save();ctx.translate(x,y);ctx.scale(s,s);p(-4,-26,8,6,'#c9b48a');p(-3,-21,6,3,SK);p(-5,-19,10,15,'#8a5a3a');p(-3,-4,3,4,'#2a1a10');p(1,-4,3,4,'#2a1a10');p(6,-32,1,32,'#6b4a2a');ctx.restore()}
+// game
+const BPM=96,SPB=60/BPM,FALL=1.5,TOPY=76,HITY=232,LANE=45;
+const L8=[0,2,1,3,2,0,3,1];
+function build(n){const a=[];if(n==0)for(let b=0;b<12;b++)a.push([b,[1,2,0,3][b%4]]);
+ if(n==1)for(let b=0;b<16;b++){a.push([b,L8[b%8]]);if(b%4==3)a.push([b+.5,(L8[b%8]+1)%4])}
+ if(n==2)for(let i=0;i<32;i++)if(i%4!=3)a.push([i/2,(i*7+(i>>3))%4]);return a}
+const LINE=['天使：「時候到了。這是給眾人的大喜信息！」','天使同伴：「讓牧羊人聽見，也讓夜空充滿讚美。」','天使：「在至高之處榮耀歸與神！」'];
+let ph='idle',rd=0,notes=[],t0=0,endT=0,hs=0,idx=0,hits=0,combo=0,tot=[0,0,0],fx=[],pop=null,lane=[0,0,0,0],lg='',T=0,last=0,sh=0;
+const say=s=>{if(lg!=s){lg=s;$('dl').innerHTML=s}};
+function dots(){[...$('rd').querySelectorAll('i')].forEach((e,i)=>e.className=i<rd?'ok':i==rd&&ph!='idle'?'on':'')}
+function flash(t,ms){const f=$('fl');f.textContent=t;f.style.opacity=1;setTimeout(()=>f.style.opacity=0,ms)}
+function startRound(n){rd=n;notes=build(n).map(([b,l])=>({t:0,b,l,j:0}));t0=clock()+2.2;notes.forEach(o=>o.t=t0+o.b*SPB);endT=notes[notes.length-1].t+1.3;hs=0;idx=0;hits=0;combo=0;ph='round';say(LINE[n]);dots();$('pf').style.width='0%'}
+function begin(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state=='suspended')ac.resume();tot=[0,0,0];$('intro').style.display=$('win').style.display='none';startRound(0)}
+$('go').onclick=begin;$('rb').onclick=begin;
+function tap(l){if(ph!='round')return;lane[l]=1;const now=clock();let b=null;notes.forEach(o=>{if(o.l==l&&!o.j){const d=Math.abs(o.t-now);if(d<.2&&(!b||d<Math.abs(b.t-now)))b=o}});
+ if(!b)return;const d=Math.abs(b.t-now);b.j=d<.075?2:1;hits++;combo++;tot[b.j==2?0:1]++;bell(NOTE[l],Math.max(now,ac?ac.currentTime:0));pop={s:b.j==2?'完美':'良好',x:l*LANE+LANE/2,t:0,c:b.j==2?'#fff6a0':'#8fd8ff'};fx.push({x:l*LANE+LANE/2,t:0});$('pf').style.width=(hits/notes.length*100)+'%'}
+cv.addEventListener('pointerdown',e=>{const b=cv.getBoundingClientRect();tap(Math.max(0,Math.min(3,Math.floor((e.clientX-b.left)/b.width*4))))});
+addEventListener('keydown',e=>{const k='dfjk'.indexOf(e.key.toLowerCase());if(k>=0)tap(k)});
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000||0);last=now;T+=dt;const c=clock();
+ if(ph=='round'){while(hs*SPB/2+t0<c+.3&&hs*SPB/2+t0<endT-1){const t=Math.max(c,t0+hs*SPB/2);if(hs%2==0)kick(t);else hat(t);hs++}
+  notes.forEach(o=>{if(!o.j&&o.t<c-.2){o.j=-1;if(combo>2)sh=4;combo=0}});
+  if(c>endT){const pct=hits/notes.length;if(pct>=.65){ph='gap';$('dl').style.opacity=1;if(rd<2){flash(`第 ${rd+1} 輪完成`,1500);setTimeout(()=>startRound(rd+1),1800);ph='gap'}else{ph='win';setTimeout(win,900);flash('宣告完成！',1200);say('天使同伴：「牧羊人已經收到信息！」<br>天使：「走吧，我們也去見證這份喜樂。」')}}
+   else{ph='gap';flash('再來一次',1400);say('天使：「信息要完整，再一次。」');setTimeout(()=>startRound(rd),1700)}}}
+ const bp=ph=='round'?((c-t0)/SPB%1+1)%1:0,pl=ph=='round'?Math.exp(-bp*4):0;
+ ctx.save();if(sh>0){ctx.translate(Math.sin(now/12)*sh*.3,0);sh-=.4}
+ ctx.drawImage(bg,0,0);
+ // lanes
+ ctx.globalCompositeOperation='lighter';
+ for(let l=0;l<4;l++){lane[l]=Math.max(0,lane[l]-dt*4);const gr=ctx.createLinearGradient(0,TOPY,0,HITY+10);gr.addColorStop(0,'rgba(180,220,255,0)');gr.addColorStop(1,`rgba(255,236,170,${.07+lane[l]*.3})`);ctx.fillStyle=gr;ctx.fillRect(l*LANE+3,TOPY,LANE-6,HITY-TOPY+12)}
+ const hg=ctx.createRadialGradient(90,60,4,90,60,150);hg.addColorStop(0,`rgba(190,225,255,${.18+pl*.12})`);hg.addColorStop(1,'rgba(150,190,255,0)');ctx.fillStyle=hg;ctx.fillRect(0,0,180,230);ctx.globalCompositeOperation='source-over';
+ angel(30,64,.95,T+1,pl);angel(150,64,.95,T+2,pl);angel(90,58,1.35,T,pl);
+ // hit line
+ for(let l=0;l<4;l++){const x=l*LANE+LANE/2;ctx.strokeStyle=lane[l]>0?'#fff6c8':'rgba(255,240,180,.75)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,HITY,9+pl*1.5,0,7);ctx.stroke();ctx.fillStyle=`rgba(255,240,180,${.12+lane[l]*.4})`;ctx.beginPath();ctx.arc(x,HITY,9,0,7);ctx.fill()}
+ // notes
+ ctx.globalCompositeOperation='lighter';
+ notes.forEach(o=>{if(o.j>0)return;const y=HITY-(o.t-c)/FALL*(HITY-TOPY);if(y<TOPY-8||y>HITY+30)return;const x=o.l*LANE+LANE/2,a=o.j<0?.25:1,s=1+Math.max(0,(y-TOPY)/(HITY-TOPY))*.3;
+  const gr=ctx.createRadialGradient(x,y,1,x,y,11*s);gr.addColorStop(0,`rgba(255,250,210,${a})`);gr.addColorStop(.5,`rgba(255,220,120,${.55*a})`);gr.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=gr;ctx.fillRect(x-12*s,y-12*s,24*s,24*s);
+  ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fillRect(x-1,y-5*s,2,10*s);ctx.fillRect(x-5*s,y-1,10*s,2)});
+ fx.forEach(f=>{f.t+=dt*3;const rr=9+f.t*18;ctx.strokeStyle=`rgba(255,240,170,${1-f.t})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(f.x,HITY,rr,0,7);ctx.stroke();for(let k=0;k<6;k++){const a=k*1.05+f.t;ctx.fillStyle=`rgba(255,246,200,${1-f.t})`;ctx.fillRect((f.x+Math.cos(a)*rr)|0,(HITY+Math.sin(a)*rr)|0,2,2)}});fx=fx.filter(f=>f.t<1);
+ ctx.globalCompositeOperation='source-over';
+ // shepherds + fire
+ shep(60,282,.62);shep(78,284,.55);p(110,274,10,6,'#f4f0e6');p(118,270,5,5,'#3a3030');p(100,277,8,5,'#f4f0e6');
+ ctx.globalCompositeOperation='lighter';const ff=.8+Math.sin(T*10)*.15,fg=ctx.createRadialGradient(92,280,1,92,280,40);fg.addColorStop(0,`rgba(255,160,60,${.55*ff})`);fg.addColorStop(1,'rgba(255,100,30,0)');ctx.fillStyle=fg;ctx.fillRect(50,240,90,60);ctx.globalCompositeOperation='source-over';
+ p(90,278,4,4,'#ffb040');p(91,275,2,4,'#ffe070');
+ // text
+ if(pop){pop.t+=dt;if(pop.t>.6)pop=null;else{ctx.fillStyle=pop.c;ctx.globalAlpha=1-pop.t/.6;ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(pop.s,pop.x,HITY-16-pop.t*16);ctx.globalAlpha=1}}
+ if(combo>=3&&ph=='round'){ctx.fillStyle='#fff6c8';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(combo+' 連擊',90,134)}
+ if(ph=='round'&&c<t0-.2){ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('準備…',90,150)}
+ ctx.restore();requestAnimationFrame(frame)}
+function win(){$('st').innerHTML=`完美 ${tot[0]}｜良好 ${tot[1]}`;$('win').style.display='flex'}
+dots();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

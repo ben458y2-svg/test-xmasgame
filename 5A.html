@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>第5章・新的生命</title>
+<style>
+:root{--bg:#0b0a1a;--ink:#fff3d6;--gold:#ffcf6b;--panel:rgba(30,18,10,.9)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overscroll-behavior:none;touch-action:none;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+#g{position:relative;container-type:size;width:min(100vw,calc(100dvh*9/16));height:min(100dvh,calc(100vw*16/9));overflow:hidden;background:#000}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.blur{position:absolute;left:0;right:0;bottom:0;height:12%;pointer-events:none;backdrop-filter:blur(2.5px);-webkit-backdrop-filter:blur(2.5px);-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 2cqw) 4cqw 0;font-size:3.6cqw;display:flex;justify-content:space-between;text-shadow:0 .4cqw 0 #000}
+.top b{color:var(--gold);letter-spacing:.12em}
+#sub{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 10cqw);text-align:center;font-size:3.3cqw;opacity:.85;text-shadow:0 .3cqw 0 #000}
+#dl{position:absolute;left:3cqw;right:3cqw;bottom:calc(env(safe-area-inset-bottom,0px) + 3cqw);background:var(--panel);border:.5cqw solid var(--gold);border-radius:2.5cqw;padding:3cqw 4cqw;font-size:3.9cqw;line-height:1.55;min-height:19cqw;pointer-events:none}
+button{font:inherit;color:#2a1808;background:var(--gold);border:0;border-radius:999px;padding:2.4cqw 7cqw;font-size:4.2cqw;font-weight:700;box-shadow:0 0 3cqw var(--gold)}
+.ov{position:absolute;inset:0;background:rgba(16,9,4,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;text-align:center;font-size:4.1cqw;line-height:1.6}
+.ov h2{margin:0;color:var(--gold);font-size:6cqw}
+.card{background:#2a1c10;border:.5cqw dashed var(--gold);border-radius:3cqw;padding:3.5cqw 5cqw;font-size:3.8cqw;animation:fly 2.4s ease-in-out infinite}
+@keyframes fly{50%{transform:translateY(-2.5cqw) rotate(-2deg)}}
+.hint{font-size:3.2cqw;opacity:.8}
+.rot{position:fixed;inset:0;background:#0b0a1a;display:none;align-items:center;justify-content:center;font-size:5vmin;z-index:9}
+@media (orientation:landscape) and (max-height:500px){.rot{display:flex}}
+</style>
+</head>
+<body>
+<div id="g">
+<canvas id="c" width="180" height="320"></canvas>
+<div class="blur"></div>
+<div class="top"><span>第5章　降臨</span><b>約瑟與瑪利亞｜新的生命</b></div>
+<div id="sub">不設倒數，慢慢來</div>
+<div id="dl"></div>
+<div class="ov" id="intro" style="display:flex"><h2>新的生命</h2>
+<div class="card">🛖 收到【整理好的馬槽】與【嬰孩用品】<br><small>來自：第4、第3章的努力</small></div>
+<div>夜深了，馬廄裡的燈還亮著。<br>依序<b>拖曳</b>物品到馬槽，準備好一切。</div>
+<div class="hint">順序：乾草 → 布料 → 嬰孩用品</div><button id="go">走進馬廄</button></div>
+<div class="ov" id="win"><h2>喜樂臨到</h2>
+<div class="card">📣 全局事件：<b>【耶穌降生】</b><br><small>已啟用　→　解鎖【天使】第5章「榮耀的宣告」</small></div>
+<div class="hint">其他隊伍的第5章，將依序展開</div><button id="rb">再玩一次</button></div>
+</div>
+<div class="rot">請將手機轉為直向</div>
+<script>
+const $=i=>document.getElementById(i),cv=$('c'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+let sd=4;const r=()=>(sd=sd*16807%2147483647)/2147483647;
+const P=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x|0,y|0,Math.max(1,w|0),Math.max(1,h|0))},p=(x,y,w,h,c)=>P(ctx,x,y,w,h,c);
+const IC={hay:[['..y.y.y.','.yyyyyyy','y.yhyyy.','.yyyyyyy','yyyhyyy.','.yyyyyy.','..bbbb..','........'],{y:'#e0b84a',h:'#f8dc80',b:'#a06a30'}],
+cloth:[['........','.wwwwww.','.wwwwww.','.wbwwbw.','.wwwwww.','.wwwwww.','..wwww..','........'],{w:'#f4efe0',b:'#c8d8f0'}],
+band:[['........','........','........','ssssssss','sbsbsbsb','ssssssss','........','........'],{s:'#efe0c0',b:'#c8a070'}],
+pil:[['........','..pppp..','.phpppp.','.ppppph.','.pppppp.','..pppp..','........','........'],{p:'#a8c4ec',h:'#d0e0ff'}]};
+const ico=(k,x,y,s,a)=>{ctx.globalAlpha=a==null?1:a;const[m,c]=IC[k];m.forEach((row,j)=>[...row].forEach((ch,i)=>{if(ch!='.')p(x+i*s,y+j*s,s,s,c[ch])}));ctx.globalAlpha=1};
+// bg
+const bg=document.createElement('canvas');bg.width=180;bg.height=320;const g=bg.getContext('2d');
+P(g,0,0,180,320,'#1a100a');
+for(let x=0;x<180;x+=9){P(g,x,40,1,150,'#2e1e12');P(g,x+4,40,4,150,x%18?'#4a3220':'#44301e')}
+for(let i=0;i<120;i++)P(g,r()*180,40+r()*150,2,1,'#3a2616');
+P(g,0,0,180,40,'#24180f');for(let i=0;i<30;i++)P(g,r()*180,r()*36,3,1,'#34241a');
+P(g,66,0,48,34,'#14104a');for(let y=0;y<34;y++)P(g,66,y,48,1,y<14?'#14104a':y<24?'#26196a':'#40267a');
+for(let i=0;i<16;i++)P(g,67+r()*46,r()*28,1,1,r()>.5?'#fff':'#bcb6ff');
+P(g,60,0,6,38,'#1a1008');P(g,114,0,6,38,'#1a1008');P(g,0,36,180,4,'#1a1008');P(g,0,0,10,320,'#1a1008');P(g,170,0,10,320,'#1a1008');
+P(g,0,188,180,132,'#5a3e20');for(let i=0;i<320;i++)P(g,r()*180,190+r()*130,r()>.5?4:2,1,r()>.5?'#7a5a30':'#3e2a14');
+P(g,0,186,180,3,'#2a1a0c');
+// pixels
+const SK='#e0a878';
+function body(x,rb,sh,top){p(x-3,-26,6,2,top);p(x-3,-25,6,5,SK);p(x-2,-23,1,1,'#222');p(x+1,-23,1,1,'#222');p(x-4,-20,8,18,rb);p(x+1,-20,3,18,sh);p(x-5,-19,2,9,rb);p(x+3,-19,2,9,sh);p(x-5,-10,2,2,SK);p(x+3,-10,2,2,SK);p(x-3,-2,3,2,'#2a1a10');p(x+1,-2,3,2,'#2a1a10')}
+const ORDER=['hay','hay','cloth','band','pil'],LAB=['乾草','乾草','布料','襁褓帶','小枕'],TX=[22,56,90,124,158],TY=262;
+const MX=90,MY=204;let st=-1,ph='idle',T=0,last=0,drag=-1,dp=[0,0],t0=0,lg='',ev=0,shake=0;
+const say=s=>{if(lg!=s){lg=s;$('dl').innerHTML=s}};
+function begin(){st=0;ph='play';drag=-1;ev=0;$('intro').style.display=$('win').style.display='none';say('約瑟：「乾草、布料、馬槽……這次我一樣都沒忘。」<br>瑪利亞：「謝謝你。也謝謝那些一路幫助我們的人。」')}
+$('go').onclick=begin;$('rb').onclick=begin;
+const pos=e=>{const b=cv.getBoundingClientRect();return[(e.clientX-b.left)/b.width*180,(e.clientY-b.top)/b.height*320]};
+cv.addEventListener('pointerdown',e=>{if(ph!='play')return;cv.setPointerCapture(e.pointerId);const[x,y]=pos(e);dp=[x,y];
+ const i=TX.findIndex((tx,k)=>k>=st&&Math.abs(tx-x)<16&&Math.abs(TY-y)<18);
+ if(i<0)return;if(i==st)drag=i;else{shake=6;say(`瑪利亞：「先放${LAB[st]}吧。」`)}});
+cv.addEventListener('pointermove',e=>{if(drag>=0)dp=pos(e)});
+const up=()=>{if(drag<0)return;if(Math.hypot(dp[0]-MX,dp[1]-(MY-6))<34){st++;ev=T;const m=['乾草鋪好了一層。','再添一些乾草，讓它柔軟一點。','把乾淨的布料鋪上去。','襁褓帶放在手邊。','最後，柔軟的小枕。'][st-1];say('約瑟：「'+m+'」');if(st>=5){ph='birth';t0=T}}drag=-1};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',()=>drag=-1);
+function manger(s,baby){p(58,196,64,7,'#9a6a3a');p(60,203,60,24,'#6a3c1c');p(60,203,5,24,'#7a4a24');p(115,203,5,24,'#5a300e');
+ p(64,227,6,16,'#4a280c');p(110,227,6,16,'#4a280c');p(60,214,60,2,'#5a300e');
+ if(s>=1){p(62,194,56,6,'#d8b048');for(let i=0;i<10;i++)p(64+i*5,190+(i%3)*2,1,6,'#f0d070')}
+ if(s>=2){p(66,188,48,8,'#e0b84a');for(let i=0;i<9;i++)p(68+i*5,184+(i%2)*3,1,7,'#f8dc80')}
+ if(s>=3){p(68,184,44,10,'#f4efe0');p(68,184,44,2,'#fff');for(let i=0;i<3;i++)p(78+i*12,188,1,5,'#d8d0c0')}
+ if(s>=4)p(70,182,40,4,'#efe0c0');if(s>=4)for(let i=0;i<8;i++)p(72+i*5,183,2,2,'#c8a070');
+ if(s>=5&&!baby)p(74,177,18,8,'#a8c4ec');if(s>=5&&!baby)p(76,178,8,2,'#d0e0ff');
+ if(baby){const a=Math.min(1,baby);ctx.globalAlpha=a;p(72,178,34,10,'#f4efe0');p(72,178,34,2,'#fff');p(74,172,14,10,'#e8b890');p(76,175,3,1,'#6a4030');p(82,175,3,1,'#6a4030');p(78,178,4,1,'#c88070');p(70,176,38,12,'rgba(0,0,0,0)');ctx.globalAlpha=1}}
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000||0);last=now;T+=dt;
+ const bt=ph=='birth'?T-t0:ph=='done'?99:0;
+ const lit=Math.min(1,st/5*.5+Math.min(1,bt/2)*.5)*(st<0?0:1);
+ if(ph=='birth'){if(bt>.5&&lg.indexOf('旁白')<0&&bt<4)say('旁白：「就在這個平凡的夜晚，耶穌降生了。」');
+  if(bt>4.2&&bt<4.4&&lg.indexOf('歡迎')<0)say('約瑟：「歡迎來到這個世界。」');
+  if(bt>6.6&&bt<6.8&&lg.indexOf('喜樂')<0)say('瑪利亞：「願這份喜樂，也臨到更多的人。」');
+  if(bt>9){ph='done';$('win').style.display='flex'}}
+ ctx.save();if(shake>0){ctx.translate(Math.sin(now/12)*shake*.3,0);shake-=.4}
+ ctx.drawImage(bg,0,0);
+ // star
+ const sx=90,sy=12;p(sx-1,sy-1,3,3,'#fff6c8');p(sx,sy-6,1,13,'#ffe9a0');p(sx-6,sy,13,1,'#ffe9a0');
+ // animals
+ const br=Math.sin(T*1.2)*.6;p(10,166+br,34,20,'#3a2c24');p(8,172+br,8,14,'#2a1e18');p(40,168+br,10,10,'#3a2c24');p(14,164+br,24,3,'#5a4636');p(44,166,2,3,'#2a1e18');
+ p(136,168-br,30,18,'#4a4650');p(158,160-br,10,14,'#4a4650');p(160,154-br,2,7,'#3a363e');p(164,154-br,2,7,'#3a363e');p(136,166-br,28,3,'#6a6670');
+ // lantern
+ p(28,52,1,14,'#3a2a1a');p(24,66,9,9,'#ffd47a');p(24,64,9,2,'#3a2a1a');p(24,75,9,2,'#3a2a1a');
+ manger(Math.min(st,5),ph=='birth'||ph=='done'?Math.max(0,(bt-1.2)/1.5):0);
+ // characters
+ const bob=Math.sin(T*.8);ctx.save();ctx.translate(36,242);ctx.scale(1.5,1.5);body(0,'#b27a30','#8a5a22','#4a2f1e');p(-3,-21,6,2,'#4a2f1e');p(10,-34,1,34,'#6b4a2a');ctx.restore();
+ p(122,232,44,16,'#c8a048');p(124,226,40,8,'#d8b058');
+ ctx.save();ctx.translate(144,240+bob*.6);ctx.scale(1.4,1.4);body(0,'#3a5fb0','#2c4a90','#f2efe6');p(-4,-25,1,8,'#f2efe6');p(3,-25,1,8,'#f2efe6');p(2,-12,4,5,'#4d78cc');ctx.restore();
+ // light beam
+ ctx.globalCompositeOperation='lighter';const al=.1+lit*.22+(ph=='done'?.05:0)+Math.sin(T*2)*.01;
+ const lg2=ctx.createLinearGradient(0,30,0,230);lg2.addColorStop(0,`rgba(255,240,170,${al+.1})`);lg2.addColorStop(1,`rgba(255,220,130,${al})`);
+ ctx.fillStyle=lg2;ctx.beginPath();ctx.moveTo(72,32);ctx.lineTo(108,32);ctx.lineTo(MX+38,230);ctx.lineTo(MX-38,230);ctx.fill();
+ const gr=ctx.createRadialGradient(MX,MY-16,4,MX,MY-16,70);gr.addColorStop(0,`rgba(255,230,150,${.15+lit*.5})`);gr.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=gr;ctx.fillRect(10,110,160,200);
+ const f=.85+Math.sin(T*8)*.08,lgr=ctx.createRadialGradient(28,70,2,28,70,70);lgr.addColorStop(0,`rgba(255,170,70,${.4*f})`);lgr.addColorStop(1,'rgba(255,110,30,0)');ctx.fillStyle=lgr;ctx.fillRect(0,0,110,160);
+ for(let k=0;k<16;k++){const q=(T*.18+k/16)%1;ctx.fillStyle=`rgba(255,235,170,${.7*(1-q)*(.4+lit)})`;ctx.fillRect((78+((k*13)%24)+Math.sin(T+k)*3)|0,(34+q*190)|0,1,1)}
+ if(bt>1.2)for(let k=0;k<12;k++){const q=(T*.4+k/12)%1;ctx.fillStyle=`rgba(255,246,200,${1-q})`;ctx.fillRect((MX+Math.cos(k*2.1)*(8+q*26))|0,(MY-26-q*40)|0,2,2)}
+ ctx.globalCompositeOperation='source-over';
+ // tray
+ if(st>=0&&st<5&&ph=='play'){p(4,246,172,32,'rgba(20,10,4,.78)');ctx.fillStyle='#fff';ctx.font='7px sans-serif';ctx.textAlign='center';
+  TX.forEach((x,k)=>{const used=k<st,cur=k==st;if(!used&&!(drag==k)){if(cur){p(x-17,248,34,28,'rgba(255,207,107,.25)');p(x-17,248,34,1,'#ffcf6b');p(x-17,275,34,1,'#ffcf6b')}ico(ORDER[k],x-12,TY-14,3,cur?1:.45)}ctx.fillStyle=cur?'#ffcf6b':'rgba(255,255,255,.55)';ctx.fillText(LAB[k],x,284)});
+  if(drag>=0){ico(ORDER[drag],dp[0]-16,dp[1]-34,4)}
+  if(st==0&&drag<0){const a=T*2%2/2;ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 8px sans-serif';ctx.fillText('拖曳到馬槽 ↑',90,240+Math.sin(T*5)*2)}}
+ // vignette
+ const v=ctx.createRadialGradient(90,190,50,90,190,190);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,`rgba(8,4,2,${.65-lit*.25})`);ctx.fillStyle=v;ctx.fillRect(0,0,180,320);
+ ctx.restore();requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

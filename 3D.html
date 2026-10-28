@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>第3章・神祕的煉香工坊</title>
+<style>
+:root{--bg:#0b0a1a;--ink:#f6ecd2;--gold:#ffcf6b;--vio:#b583ff;--panel:rgba(22,14,42,.9)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overscroll-behavior:none;touch-action:none;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+#g{position:relative;container-type:size;width:min(100vw,calc(100dvh*9/16));height:min(100dvh,calc(100vw*16/9));overflow:hidden;background:#000}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 2cqw) 4cqw 0;font-size:3.6cqw;display:flex;justify-content:space-between;text-shadow:0 .4cqw 0 #000}
+.top b{color:var(--vio);letter-spacing:.12em}
+#steps{position:absolute;left:4cqw;right:4cqw;top:calc(env(safe-area-inset-top,0px) + 10cqw);display:flex;gap:1.5cqw;font-size:3cqw;text-align:center}
+#steps span{flex:1;padding:1.2cqw 0;border-radius:1.5cqw;background:rgba(20,12,40,.7);border:.4cqw solid #4a3a7a;opacity:.7}
+#steps span.on{border-color:var(--gold);color:var(--gold);opacity:1;box-shadow:0 0 2.5cqw var(--gold)}
+#steps span.ok{background:#3a2f12;border-color:#7a6a30;opacity:1}
+#pw{position:absolute;left:4cqw;right:4cqw;top:calc(env(safe-area-inset-top,0px) + 20cqw);height:2.2cqw;background:#241f4a;border-radius:1.2cqw;overflow:hidden;border:.3cqw solid #4a3a7a}
+#pf{height:100%;width:0;background:linear-gradient(90deg,var(--vio),#ffe9a0)}
+#dl{position:absolute;left:3cqw;right:3cqw;bottom:calc(env(safe-area-inset-bottom,0px) + 3cqw);background:var(--panel);border:.5cqw solid var(--vio);border-radius:2.5cqw;padding:3cqw 4cqw;font-size:3.9cqw;line-height:1.55;min-height:20cqw;pointer-events:none}
+#fl{position:absolute;left:0;right:0;top:36%;text-align:center;font-size:9cqw;font-weight:900;color:#fff6c8;text-shadow:0 0 4cqw var(--gold),0 .8cqw 0 #000;opacity:0;pointer-events:none;transition:opacity .25s}
+button{font:inherit;color:#1c1236;background:var(--vio);border:0;border-radius:999px;padding:2.4cqw 7cqw;font-size:4.2cqw;font-weight:700;box-shadow:0 0 3cqw var(--vio)}
+.ov{position:absolute;inset:0;background:rgba(12,8,26,.85);display:none;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;text-align:center;font-size:4.1cqw;line-height:1.6}
+.ov h2{margin:0;color:var(--vio);font-size:6cqw}
+.card{background:#1c1840;border:.5cqw dashed var(--gold);border-radius:3cqw;padding:3.5cqw 5cqw;font-size:3.8cqw;animation:fly 2.4s ease-in-out infinite}
+@keyframes fly{50%{transform:translateY(-2.5cqw) rotate(-2deg)}}
+.hint{font-size:3.2cqw;opacity:.8}
+.rot{position:fixed;inset:0;background:#0b0a1a;display:none;align-items:center;justify-content:center;font-size:5vmin;z-index:9}
+@media (orientation:landscape) and (max-height:500px){.rot{display:flex}}
+</style>
+</head>
+<body>
+<div id="g">
+<canvas id="c" width="180" height="320"></canvas>
+<div class="top"><span>第3章　旅途中的考驗</span><b>博士｜煉香工坊</b></div>
+<div id="steps"><span>找材料</span><span>研磨</span><span>投料</span><span>火候</span><span>攪拌</span></div>
+<div id="pw"><div id="pf"></div></div>
+<div id="fl">完成！</div>
+<div id="dl"></div>
+<div class="ov" id="intro" style="display:flex"><h2>神祕的煉香工坊</h2>
+<div class="card">🌟 收到【星光提示】<br><small>來自：天使　→　循著星光抵達工坊</small></div>
+<div>黃金、乳香、沒藥已備齊。<br>連續完成<b>五個步驟</b>，做出獻禮。</div>
+<div class="hint">失誤可重試，不扣材料</div><button id="go">進入工坊</button></div>
+<div class="ov" id="win"><h2>獻禮完成</h2>
+<div class="card">🏺 <b>黃金・乳香香料・沒藥香膏</b><br><small>博士保留，將在第【4】章裝箱</small></div>
+<div class="hint">此製作過程為遊戲化設計，並非聖經記載的必要步驟</div><button id="rb">再玩一次</button></div>
+</div>
+<div class="rot">請將手機轉為直向</div>
+<script>
+const $=i=>document.getElementById(i),cv=$('c'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+let sd=8;const r=()=>(sd=sd*16807%2147483647)/2147483647;
+const P=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x|0,y|0,w|0,h|0)},p=(x,y,w,h,c)=>P(ctx,x,y,w,h,c);
+const IC={gold:[['........','........','..hhhhh.','.hyyyyyy','yyyyyyy.','kkkkkkk.','........','........'],{y:'#f0c030',h:'#fff0a0',k:'#a07818'}],
+frank:[['........','...hh...','..hyyh..','..yyyy..','.hy..yh.','.yy..yy.','........','........'],{y:'#f0e6a0',h:'#fffbd0'}],
+myrrh:[['........','..rrr...','.rrrrr..','.rrdrrr.','.rrrrrr.','..rrrr..','........','........'],{r:'#9a4a30',d:'#6a2a1a'}],
+herb:[['..g..g..','.g.gg.g.','..gggg..','...bb...','...bb...','..bbbb..','........','........'],{g:'#4a9a4a',b:'#8a6a3a'}],
+salt:[['...ww...','..wwww..','..wwww..','.wwwwww.','.wwbwww.','.wwwwww.','........','........'],{w:'#f0f0f0',b:'#c0c0d0'}],
+bottle:[['...kk...','...bb...','..bbbb..','.bbhbbb.','.bbbbbb.','.bbbbbb.','..bbbb..','........'],{b:'#3a7ac0',h:'#8ac0f0',k:'#6a4a2a'}]};
+const ico=(k,x,y,s)=>{const[m,c]=IC[k];m.forEach((row,j)=>[...row].forEach((ch,i)=>{if(ch!='.')p(x+i*s,y+j*s,s,s,c[ch])}))};
+// bg
+const bg=document.createElement('canvas');bg.width=180;bg.height=320;const g=bg.getContext('2d');
+P(g,0,0,180,130,'#3a3248');for(let y=0;y<130;y+=12){P(g,0,y,180,1,'#2c2538');for(let x=(y/12%2)*15;x<180;x+=30)P(g,x,y,1,12,'#2c2538')}
+for(let i=0;i<120;i++)P(g,r()*180,r()*130,2,1,'#463c58');
+P(g,0,130,180,190,'#5a3c22');for(let y=136;y<320;y+=18)P(g,0,y,180,1,'#4a3018');P(g,0,128,180,5,'#8a5e34');P(g,0,133,180,2,'#3a2410');
+[[10,62],[132,62]].forEach(([x,y])=>{P(g,x,y,38,3,'#7a5230');[0,1,2,3].forEach(i=>{P(g,x+3+i*9,y-10,7,10,['#a0693a','#6a8a5a','#a05a5a','#8a7ab0'][i]);P(g,x+4+i*9,y-12,5,2,'#5a3a20')})});
+[[78,8],[92,8]].forEach(([x,y])=>{P(g,x,y,1,16,'#6a4a2a');P(g,x-3,y+16,7,6,'#4a8a4a');P(g,x-2,y+22,5,3,'#6a5a3a')});
+// state
+const NAME=['黃金','乳香','沒藥'],HINT=['博士A：「材料齊了，先確認用途和順序。」<br>【找材料】點出 黃金、乳香、沒藥','博士B：「乳香和沒藥要分開處理，別混在一起。」<br>【研磨】在缽上來回滑動','玩家博士：「先研磨，再投料。」<br>【投料】把兩碗粉末拖進鍋裡','玩家博士：「火候不能太高。」<br>【火候】按住加熱、放開降溫，讓溫度留在綠區','博士C：「這鍋泡泡顏色好漂亮！我可以多攪幾圈嗎？」<br>【攪拌】沿著鍋子畫圈'];
+const CX=90,CY=205;let step=-1,S={},T=0,shake=0,last=0,mp=[0,0],lg='';
+const say=s=>{if(lg!=s){lg=s;$('dl').innerHTML=s}};
+function begin(n){step=n;S={p:0,hold:0,tp:0,acc:0,pa:null,drag:-1,in:[0,0],tm:0,hot:0};$('intro').style.display=$('win').style.display='none';
+ [...$('steps').children].forEach((e,i)=>e.className=i<n?'ok':i==n?'on':'');say(HINT[n]);
+ if(n==0){const pos=[[36,170],[90,170],[144,170],[36,225],[90,225],[144,225]].sort(()=>r()-.5);S.it=['gold','frank','myrrh','herb','salt','bottle'].map((k,i)=>({k,x:pos[i][0],y:pos[i][1],ok:i<3,f:0}))}
+ if(n==2)S.b=[{x:45,y:275,hx:45,hy:275},{x:135,y:275,hx:135,hy:275}];if(n==3)S.temp=0}
+function done(){const f=$('fl');f.style.opacity=1;setTimeout(()=>{f.style.opacity=0;if(step>=4){$('win').style.display='flex';[...$('steps').children].forEach(e=>e.className='ok')}else begin(step+1)},800);S.d=1}
+$('go').onclick=()=>begin(0);$('rb').onclick=()=>begin(0);
+const pos=e=>{const b=cv.getBoundingClientRect();return[(e.clientX-b.left)/b.width*180,(e.clientY-b.top)/b.height*320]};
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const[x,y]=pos(e);mp=[x,y];if(S.d||step<0)return;
+ if(step==0){const it=S.it.find(i=>!i.f&&Math.abs(i.x-x)<20&&Math.abs(i.y-y)<18);if(!it)return;if(it.ok){it.f=1;S.p=S.it.filter(i=>i.f).length/3*100;say(`玩家博士：「找到${NAME[S.it.indexOf(it)]}了！」`);if(S.p>=99.9)done()}else{shake=6;say('博士A：「那不是這次要用的，再找找。」')}}
+ if(step==1)S.g=[x,y];
+ if(step==2){const i=S.b.findIndex(b=>!S.in[S.b.indexOf(b)]&&Math.abs(b.x-x)<20&&Math.abs(b.y-y)<18);S.drag=i}
+ if(step==3)S.hold=1;
+ if(step==4)S.pa=Math.atan2(y-CY,x-CX)});
+cv.addEventListener('pointermove',e=>{const[x,y]=pos(e);const dx=x-mp[0],dy=y-mp[1];mp=[x,y];if(S.d)return;
+ if(step==1&&S.g&&Math.hypot(x-90,y-205)<36){S.p=Math.min(100,S.p+Math.hypot(dx,dy)*.28);if(S.p>=100)done()}
+ if(step==2&&S.drag>=0){S.b[S.drag].x=x;S.b[S.drag].y=y}
+ if(step==4&&S.pa!==null){const a=Math.atan2(y-CY,x-CX);let da=a-S.pa;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;S.pa=a;const d=Math.hypot(x-CX,y-CY);if(d>10&&d<55){S.acc+=da;S.p=Math.min(100,Math.abs(S.acc)/(2*Math.PI)/5*100);if(S.p>=100)done()}}});
+const up=()=>{S.g=0;S.hold=0;S.pa=null;if(step==2&&S.drag>=0){const b=S.b[S.drag];if(Math.hypot(b.x-CX,b.y-CY)<30){S.in[S.drag]=1;S.p=S.in.filter(Boolean).length*50;say(S.drag?'玩家博士：「沒藥香膏的粉末，下鍋。」':'玩家博士：「乳香粉末，下鍋。」');if(S.in[0]&&S.in[1])done()}else{b.x=b.hx;b.y=b.hy}S.drag=-1}};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+function pot(liq){p(CX-22,CY+14,5,6,'#1a1a22');p(CX+17,CY+14,5,6,'#1a1a22');p(CX-24,CY-16,48,4,'#4a4a58');p(CX-22,CY-12,44,26,'#2a2a34');p(CX-22,CY-12,5,26,'#3a3a46');p(CX-20,CY-12,40,5,liq);p(CX-16,CY-12,10,1,'rgba(255,255,255,.35)')}
+const mix=(a,b,t)=>{const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16);return'#'+[16,8,0].map(s=>Math.round((A>>s&255)*(1-t)+(B>>s&255)*t).toString(16).padStart(2,'0')).join('')};
+function body(x,rb,sh,top){p(x-3,-26,6,2,top);p(x-3,-25,6,5,'#e0a878');p(x-2,-23,1,1,'#222');p(x+1,-23,1,1,'#222');p(x-4,-20,8,18,rb);p(x+1,-20,3,18,sh);p(x-5,-19,2,9,rb);p(x+3,-19,2,9,sh);p(x-3,-2,3,2,'#2a1a10');p(x+1,-2,3,2,'#2a1a10');p(x-3,-30,6,3,'#ffcf3a')}
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000||0);last=now;T+=dt;
+ if(step==3&&!S.d){S.temp=Math.max(0,Math.min(100,S.temp+(S.hold?48:-30)*dt));const z=S.temp>=45&&S.temp<=68;if(z)S.p=Math.min(100,S.p+dt*25);else if(S.temp>82){S.p=Math.max(0,S.p-dt*40);say('博士A：「太燙了！火候不能太高！」')}if(S.p>=100)done()}
+ $('pf').style.width=S.p+'%';
+ ctx.save();if(shake>0){ctx.translate(Math.sin(now/12)*shake*.3,0);shake-=.4}
+ ctx.drawImage(bg,0,0);
+ [[34,'#a8323c','#802028','#f6f1e0'],[90,'#6a3fb0','#4c2a88','#f6f1e0'],[146,'#1f8a8a','#166464','#f6f1e0']].forEach(([x,a,b,t],i)=>{ctx.save();ctx.translate(x,126+Math.sin(T*2+i)*.8);ctx.scale(.95,.95);body(0,a,b,'#ffcf3a');ctx.restore()});
+ ctx.globalCompositeOperation='lighter';[[30,96],[150,96]].forEach(([x,y])=>{const f=.8+Math.sin(T*9+x)*.1,gr=ctx.createRadialGradient(x,y,2,x,y,60);gr.addColorStop(0,`rgba(255,170,70,${.4*f})`);gr.addColorStop(1,'rgba(255,100,30,0)');ctx.fillStyle=gr;ctx.fillRect(x-60,y-60,120,160)});ctx.globalCompositeOperation='source-over';
+ if(step==0)S.it.forEach(i=>{p(i.x-14,i.y+14,28,2,'rgba(0,0,0,.25)');ico(i.k,i.x-12,i.y-12,3);if(i.f){p(i.x+8,i.y-14,9,9,'#2a7a3a');p(i.x+10,i.y-10,2,2,'#fff');p(i.x+12,i.y-8,2,2,'#fff');p(i.x+14,i.y-11,2,2,'#fff')}});
+ if(step==1){const t=S.p/100;p(58,186,64,40,'#7a7a88');p(60,190,60,32,'#4a4a56');p(62,192,56,8,'#5a5a68');
+  for(let k=0;k<6;k++)p(72+k*7+Math.sin(k*3)*3,206+Math.cos(k*2)*4,(6-t*4)|0,(5-t*3)|0,mix('#c9a050','#e8dcc0',t));
+  if(S.g){const x=mp[0],y=mp[1];p(x-2,y-24,5,24,'#a0693a');p(x-4,y-27,9,5,'#c08a52')}}
+ if(step>=2){const liq=step==2?(S.in[0]||S.in[1]?'#6a5a4a':'#3a5a7a'):step==3?mix('#6a5a4a','#b8862a',S.p/100):mix('#b8862a','#e0a83a',S.p/100);
+  if(step==3){const h=S.temp,n=7;for(let i=0;i<n;i++){const fh=3+h*.16*(1+Math.sin(T*11+i*2))*.6+(h>5?2:0);p(CX-20+i*6.5,CY+22-fh,5,fh,i%2?'#ffb040':'#ff7a30');p(CX-19+i*6.5,CY+22-fh*.5,3,fh*.5,'#ffe070')}}
+  pot(liq);
+  if(step>=3)for(let k=0;k<5;k++){const q=(T*.8+k/5)%1;p(CX-16+k*8+Math.sin(T*3+k)*2,CY-14-q*10,2,2,`rgba(255,240,190,${1-q})`)}
+  if(step==4){for(let k=0;k<4;k++){const a=S.acc*1.2+k*Math.PI/2;p(CX+Math.cos(a)*(8+k*3),CY-9+Math.sin(a)*2.2,3,1,'rgba(255,230,150,.8)')}
+   if(S.pa!==null||S.p>0){const a=S.acc*1.2;p(CX+Math.cos(a)*18-1,CY-30,3,26,'#a0693a');p(CX+Math.cos(a)*18-3,CY-34,7,5,'#c08a52')}}}
+ if(step==2){S.b.forEach((b,i)=>{if(S.in[i])return;p(b.x-14,b.y+8,28,2,'rgba(0,0,0,.25)');p(b.x-13,b.y-4,26,12,'#8a8a96');p(b.x-11,b.y-6,22,5,i?'#a85a3a':'#f0e6b0');p(b.x-11,b.y-7,22,2,i?'#c8785a':'#fffbd0')});
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.fillText('乳香',45,298);ctx.fillText('沒藥',135,298)}
+ if(step==3){const x=160,y0=150,h=120;p(x-5,y0,12,h,'#1c1432');p(x-4,y0+h*(1-.68),10,h*.23,'#3aa860');p(x-4,y0+h*(1-S.temp/100)-1,10,3,'#fff');p(x-6,y0+h+2,14,3,'#4a3a7a');ctx.fillStyle='#fff';ctx.font='7px sans-serif';ctx.textAlign='center';ctx.fillText('溫度',x+1,y0-4);
+  if(!S.hold&&S.temp<20){ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 9px sans-serif';ctx.fillText('按住畫面加熱',90,262)}}
+ if(step==4&&S.p<5){ctx.strokeStyle='rgba(255,230,150,.6)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(CX,CY,30,0,7);ctx.stroke();ctx.setLineDash([])}
+ ctx.globalCompositeOperation='lighter';for(let k=0;k<10;k++){const q=(T*.25+k/10)%1;ctx.fillStyle=`rgba(255,200,110,${.35*(1-q)})`;ctx.fillRect((k*19+Math.sin(T+k)*5)%180|0,(300-q*160)|0,1,1)}ctx.globalCompositeOperation='source-over';
+ ctx.restore();requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

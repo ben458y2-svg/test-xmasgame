@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>第1章・暴衝羊大逃亡</title>
+<style>
+:root{--bg:#0b0a1a;--ink:#fff8e0;--g:#7be08a;--gold:#ffcf6b;--panel:rgba(20,32,24,.9)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overscroll-behavior:none;touch-action:none;user-select:none}
+body{display:flex;align-items:center;justify-content:center}
+#g{position:relative;container-type:size;width:min(100vw,calc(100dvh*9/16));height:min(100dvh,calc(100vw*16/9));overflow:hidden;background:#000}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.blur{position:absolute;left:0;right:0;pointer-events:none;backdrop-filter:blur(2.5px);-webkit-backdrop-filter:blur(2.5px)}
+.blur.t{top:22%;height:9%;-webkit-mask-image:linear-gradient(transparent,#000,transparent);mask-image:linear-gradient(transparent,#000,transparent)}
+.blur.b{bottom:0;height:14%;-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
+.top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 2cqw) 4cqw 0;font-size:3.6cqw;display:flex;justify-content:space-between;text-shadow:0 .4cqw 0 #000}
+.top b{color:var(--gold);letter-spacing:.12em}
+#grid{position:absolute;left:4cqw;top:calc(env(safe-area-inset-top,0px) + 10cqw);display:grid;grid-template-columns:repeat(6,8cqw);gap:1.5cqw;font-size:3cqw;align-items:center}
+#grid i{height:7cqw;border-radius:1cqw;background:rgba(10,20,14,.6);border:.4cqw dashed #9ab89a;transition:.2s}
+#grid i.on{background:#f0e0b0;border:.4cqw solid #fff6d0;box-shadow:0 0 2.5cqw var(--gold)}
+#grid span{grid-column:1/-1;text-shadow:0 .3cqw 0 #000}
+#dl{position:absolute;left:3cqw;right:3cqw;bottom:calc(env(safe-area-inset-bottom,0px) + 3cqw);background:var(--panel);border:.5cqw solid var(--g);border-radius:2.5cqw;padding:3cqw 4cqw;font-size:4cqw;line-height:1.55;min-height:17cqw}
+button{font:inherit;color:#12281a;background:var(--g);border:0;border-radius:999px;padding:2.4cqw 7cqw;font-size:4.2cqw;font-weight:700;box-shadow:0 0 3cqw var(--g)}
+.ov{position:absolute;inset:0;background:rgba(10,18,12,.84);display:none;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;text-align:center;font-size:4.2cqw;line-height:1.6}
+.ov h2{margin:0;color:var(--g);font-size:6cqw}
+.card{background:#1e2a1e;border:.5cqw dashed var(--gold);border-radius:3cqw;padding:3.5cqw 5cqw;font-size:3.8cqw;animation:fly 2.4s ease-in-out infinite}
+@keyframes fly{50%{transform:translateY(-2.5cqw) rotate(-2deg)}}
+#mp{width:50cqw;height:34cqw;image-rendering:pixelated;border-radius:1cqw}
+.hint{font-size:3.4cqw;opacity:.8}
+.rot{position:fixed;inset:0;background:#0b0a1a;display:none;align-items:center;justify-content:center;font-size:5vmin;z-index:9}
+@media (orientation:landscape) and (max-height:500px){.rot{display:flex}}
+</style>
+</head>
+<body>
+<div id="g">
+<canvas id="c" width="180" height="320"></canvas>
+<div class="blur t"></div><div class="blur b"></div>
+<div class="top"><span>第1章　命運的起點</span><b>牧羊人｜暴衝羊大逃亡</b></div>
+<div id="grid"><span id="gl">地圖碎片 0 / 6</span><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div id="dl"></div>
+<div class="ov" id="intro" style="display:flex"><h2>暴衝羊大逃亡</h2>
+<div>一隻羊叼走了紙本地圖，邊跑邊掉碎片！<br>自動追著跑，<b>點擊畫面跳躍</b>。</div>
+<div class="hint">跳過石頭與柵欄，但別跳過碎片<br>要踩在地上才撿得到！</div>
+<button id="go">開始追羊</button></div>
+<div class="ov" id="win"><h2>地圖拼好了！</h2><canvas id="mp" width="50" height="34"></canvas>
+<div class="card">🗺️ <b>紙本地圖</b><br><small>已送往【博士】，將在第【2】章派上用場</small></div>
+<div id="st" class="hint"></div><button id="rb">再玩一次</button></div>
+</div>
+<div class="rot">請將手機轉為直向</div>
+<script>
+const $=i=>document.getElementById(i),cv=$('c'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+let sd=3;const r=()=>(sd=sd*16807%2147483647)/2147483647;
+const P=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x|0,y|0,w|0||1,h|0||1,c)},p=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x|0,y|0,Math.max(1,w|0),Math.max(1,h|0))};
+const HZ=96,PY=250,yz=z=>HZ+160*z,sc=z=>.18+.95*z,rw=z=>12+62*z;
+// static sky
+const bg=document.createElement('canvas');bg.width=180;bg.height=100;const g=bg.getContext('2d');
+['#4a62c0','#5f78cc','#7e8cd0','#a898c8','#d0a0b0','#eeaa90','#f8c07c','#fcd28c'].forEach((c,i)=>{g.fillStyle=c;g.fillRect(0,i*13,180,14)});
+const sg=g.createRadialGradient(130,84,2,130,84,48);sg.addColorStop(0,'rgba(255,250,200,.95)');sg.addColorStop(1,'rgba(255,220,140,0)');g.fillStyle=sg;g.fillRect(70,30,120,70);
+g.fillStyle='#fffbe0';g.fillRect(127,81,7,7);
+for(let i=0;i<5;i++){const x=r()*160,y=14+r()*34;g.fillStyle='rgba(255,230,230,.55)';g.fillRect(x,y,24,3);g.fillRect(x+4,y-2,14,2)}
+for(let x=0;x<180;x++){g.fillStyle='#7a8cae';g.fillRect(x,78+Math.sin(x*.04)*7+Math.sin(x*.13)*2,1,30);g.fillStyle='#4f7a62';g.fillRect(x,88+Math.sin(x*.06+2)*5,1,20)}
+// state
+let ph='intro',T=0,items=[],scen=[],spT=0,scT=0,jt=-1,col=0,stum=0,slow=0,shake=0,pops=[],lg='',tick=0;
+const say=s=>{if(lg!=s){lg=s;$('dl').innerHTML=s}};
+function reset(){ph='play';T=0;items=[];scen=[];spT=.4;scT=0;jt=-1;col=0;stum=0;slow=0;shake=0;pops=[];tick=0;upd();$('intro').style.display=$('win').style.display='none';say('牧羊人：「等等！那不是草！是我們的地圖！」')}
+const upd=()=>{[...$('grid').querySelectorAll('i')].forEach((e,i)=>e.classList.toggle('on',i<col));$('gl').textContent=`地圖碎片 ${col} / 6`};
+$('go').onclick=reset;$('rb').onclick=reset;
+cv.addEventListener('pointerdown',()=>{if(ph=='play'&&jt<0)jt=0});
+addEventListener('keydown',e=>{if((e.key==' '||e.key=='ArrowUp')&&ph=='play'&&jt<0)jt=0});
+const jy=()=>jt<0?0:40*Math.sin(Math.PI*jt/.55);
+function rock(x,y,s){p(x-11*s,y-12*s,22*s,12*s,'#6a6a78');p(x-9*s,y-15*s,16*s,5*s,'#8a8a98');p(x-3*s,y-14*s,6*s,3*s,'#a8a8b6');p(x-11*s,y-2*s,22*s,2*s,'#4a4a58')}
+function fence(x,y,s){for(const o of[-16,-6,6,16])p(x+o*s-2*s,y-16*s,4*s,16*s,'#8a5a30');p(x-19*s,y-13*s,38*s,3*s,'#b07a40');p(x-19*s,y-7*s,38*s,3*s,'#b07a40');p(x-19*s,y-1*s,38*s,2*s,'#5a3a1a')}
+function frag(x,y,s,t){const b=Math.sin(t*8)*1.5*s;ctx.globalCompositeOperation='lighter';const gr=ctx.createRadialGradient(x,y-6*s+b,1,x,y-6*s+b,13*s);gr.addColorStop(0,'rgba(255,230,140,.7)');gr.addColorStop(1,'rgba(255,230,140,0)');ctx.fillStyle=gr;ctx.fillRect(x-14*s,y-20*s+b,28*s,28*s);ctx.globalCompositeOperation='source-over';
+ p(x-7*s,y-12*s+b,14*s,11*s,'#f0e0b0');p(x-7*s,y-12*s+b,14*s,2*s,'#fff6d0');p(x-4*s,y-8*s+b,8*s,1*s,'#a07a4a');p(x-1*s,y-10*s+b,1*s,6*s,'#a07a4a');p(x+4*s,y-1*s+b,3*s,2*s,'#c0a070')}
+function tree(x,y,s,k){if(k){p(x-9*s,y-8*s,18*s,8*s,'#3f7a3a');p(x-7*s,y-11*s,12*s,4*s,'#5a9a4a')}else{p(x-2*s,y-12*s,4*s,12*s,'#5a3a20');p(x-10*s,y-30*s,20*s,20*s,'#3f7a3a');p(x-8*s,y-33*s,12*s,6*s,'#5a9a4a');p(x+1*s,y-26*s,8*s,5*s,'#2f6a30')}}
+function shep(x,y,t,h,hurt){const s=1.45,leg=Math.sin(t*14)>0;ctx.save();ctx.translate(x,y-h);ctx.scale(s,s);
+ p(-6,-1,12,2,'rgba(0,0,0,0)');p(-4,-26,8,6,hurt?'#ff9a8a':'#c9b48a');p(-3,-21,6,3,'#e0a878');p(-5,-19,10,15,hurt?'#c0605a':'#8a5a3a');p(1,-19,4,15,'#6a4028');p(-5,-11,10,1,'#4a2f18');p(-7,-17,3,7,'#6a4a2a');
+ p(-3,-4+(leg?0:-2),3,4,'#2a1a10');p(1,-4+(leg?-2:0),3,4,'#2a1a10');p(6,-32,1,32,'#6b4a2a');p(5,-33,3,1,'#6b4a2a');ctx.restore()}
+function sheep(x,y,t){const h=Math.abs(Math.sin(t*9))*4;ctx.save();ctx.translate(x,y-h);ctx.scale(.55,.55);p(-11,-14,22,13,'#f4f0e6');p(-9,-17,18,5,'#fff');p(-6,-8,6,4,'#e6e0d0');p(-6,-1,3,4,'#3a3030');p(3,-1,3,4,'#3a3030');p(-3,-21,6,5,'#3a3030');ctx.restore()}
+function frame(now){
+ const dt=Math.min(.05,(now-tick)/1000||0);tick=now;
+ if(ph!='intro'){T+=dt;if(jt>=0){jt+=dt;if(jt>.55)jt=-1}if(slow>0)slow-=dt;if(shake>0)shake-=dt*6}
+ const spd=(.5+col*.05)*(slow>0?.35:1)*(ph=='intro'?.4:1);
+ if(ph=='play'){spT-=dt;if(spT<=0){spT=.55+r()*.65;const need=col+items.filter(i=>i.t=='f').length<6;const q=r();items.push({t:need&&q<.5?'f':q<.75?'r':'k',z:.1})}
+  if(T>3.5&&T<3.6)say('牧羊人：「先追上去，碎片掉光就糟了！」');if(T>0.6&&T<0.7)say('牧羊人同伴：「牠今天怎麼跑得比風還快？」')}
+ scT-=dt;if(scT<=0){scT=.32;scen.push({z:.02,s:r()>.5?1:-1,k:r()>.55,o:r()*30})}
+ const h=jy();
+ items.forEach(it=>{it.z+=spd*dt;if(ph=='play'&&!it.d&&it.z>=.88&&it.z<=1.0){if(it.t=='f'){if(h<9){it.d=1;col++;upd();pops.push({x:90,y:PY-30,t:0});if(col==3)say('牧羊人：「再幾片就湊齊了！」');if(col>=6){ph='win';say('牧羊人同伴：「地圖拼好了，雖然有一些缺損，但就先將就著用吧。」');setTimeout(win,900)}}}else if(h<14){it.d=1;stum++;slow=.9;shake=1;say('牧羊人：「哎唷！」')}}});
+ items=items.filter(i=>i.z<1.08);scen.forEach(s=>s.z+=spd*dt);scen=scen.filter(s=>s.z<1.2);
+ // draw
+ ctx.save();ctx.translate(shake>0?Math.sin(now/15)*shake*2:0,0);
+ ctx.drawImage(bg,0,0);
+ for(let y=HZ;y<320;y++){const z=(y-HZ)/160,d=1/(z+.12),st=(Math.floor(d*2.2-T*spd*5)&1),hw=rw(z);
+  p(0,y,180,1,st?'#6fae4a':'#5f9a3e');if(y>HZ+1){p(90-hw,y,hw*2,1,st?'#c9a26a':'#bb9460');p(90-hw,y,2,1,'#8a6a40');p(90+hw-2,y,2,1,'#8a6a40')}}
+ ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(255,170,80,.1)';ctx.fillRect(0,HZ,180,224);ctx.globalCompositeOperation='source-over';
+ const all=[...scen.map(s=>({z:s.z,k:'s',s})),...items.map(i=>({z:i.z,k:'i',i}))].sort((a,b)=>a.z-b.z);let pd=false;
+ const dp=()=>{if(!pd){pd=1;shep(90,PY,T,h,slow>.4)}};
+ sheep(90+Math.sin(T*2)*3,yz(.1)+4,T);
+ all.forEach(o=>{if(o.z>.97)dp();const s=sc(o.z),y=yz(o.z);
+  if(o.k=='s'){const x=90+o.s.s*(rw(o.z)+(14+o.s.o)*s);tree(x,y,s,o.s.k)}
+  else{const it=o.i;if(it.d&&it.t=='f')return;const x=90;it.t=='r'?rock(x,y,s):it.t=='k'?fence(x,y,s):frag(x,y,s,T)}});dp();
+ // dust
+ ctx.globalCompositeOperation='lighter';for(let k=0;k<10;k++){const q=(T*1.2+k/10)%1;ctx.fillStyle=`rgba(255,220,160,${.5*(1-q)})`;ctx.fillRect((90+Math.sin(k*5)*(10+q*14))|0,(PY-q*14)|0,2,2)}ctx.globalCompositeOperation='source-over';
+ pops.forEach(o=>{o.t+=dt;ctx.fillStyle=`rgba(255,246,200,${1-o.t})`;ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText('+1 碎片',o.x,o.y-o.t*30)});pops=pops.filter(o=>o.t<1);
+ ctx.restore();requestAnimationFrame(frame)}
+function win(){const m=$('mp').getContext('2d');m.fillStyle='#e8d6a4';m.fillRect(0,0,50,34);m.fillStyle='#d0b880';[[0,0,5,4],[45,0,5,3],[46,30,4,4],[0,29,4,5]].forEach(a=>m.clearRect(...a));
+ m.fillStyle='#8a6a3a';m.fillRect(6,16,38,2);m.fillRect(24,4,2,28);m.fillRect(14,8,2,10);m.fillRect(34,18,2,10);m.fillStyle='#c0392b';m.fillRect(23,15,4,4);m.fillStyle='#6a9a4a';m.fillRect(8,6,6,5);m.fillRect(38,6,6,4);
+ $('st').innerHTML=`撞到 ${stum} 次｜地圖有缺損，只標示岔路、沒有實地註記`;$('win').style.display='flex'}
+say('');requestAnimationFrame(frame);
+</script>
+</body>
+</html>
