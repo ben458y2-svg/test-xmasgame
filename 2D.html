@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>博士 第2章｜狹窄商道前進</title>
+<style>
+:root{--bg:#0b0a1a;--c:#b583ff;--g:#ffb347;--tx:#f3eaff;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0a1a}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#05040d;overflow:hidden;overscroll-behavior:none;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--tx)}
+body{display:grid;place-items:center}
+#f{position:relative;width:min(100vw,100dvh*9/16);aspect-ratio:9/16;container-type:inline-size;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.tt,.tb{position:absolute;left:0;right:0;pointer-events:none;backdrop-filter:blur(1.6px);-webkit-backdrop-filter:blur(1.6px)}
+.tt{top:0;height:16%;-webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent)}
+.tb{bottom:0;height:26%;-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
+#top{position:absolute;top:0;left:0;right:0;padding:2.4cqw 4cqw;background:linear-gradient(rgba(11,10,26,.85),rgba(11,10,26,0));font-size:3.6cqw;display:flex;gap:2cqw;align-items:baseline}
+#top b{color:var(--c);letter-spacing:.3cqw}#top span{opacity:.85}
+#bar{position:absolute;top:9cqw;left:4cqw;width:46cqw;height:1.6cqw;border-radius:2cqw;background:rgba(255,255,255,.12);overflow:hidden}
+#bf{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c),var(--g))}
+#miss{position:absolute;top:12.5cqw;left:4cqw;font-size:3cqw;opacity:.7}
+#dlg{position:absolute;left:3.5cqw;right:3.5cqw;bottom:3.5cqw;min-height:22cqw;padding:3cqw 3.8cqw;border:.5cqw solid var(--c);border-radius:3cqw;background:rgba(11,10,26,.82);box-shadow:0 0 5cqw rgba(181,131,255,.35)}
+#dlg b{display:block;font-size:3.2cqw;color:var(--c);margin-bottom:1cqw}
+#dlg p{margin:0;font-size:4cqw;line-height:1.5}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;background:rgba(11,10,26,.9);text-align:center}
+.ov h2{margin:0;font-size:6cqw;color:var(--c)}
+.ov p{margin:0;font-size:3.8cqw;line-height:1.65;opacity:.92}
+.item{border:.6cqw dashed var(--g);border-radius:2.5cqw;padding:3cqw 4cqw;color:var(--g);font-size:3.8cqw;line-height:1.5;background:rgba(255,179,71,.07);animation:fl 2.4s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-1.4cqw)}}
+button{min-height:44px;padding:2.4cqw 9cqw;font:inherit;font-size:4.2cqw;color:#150d28;background:var(--c);border:0;border-radius:6cqw;box-shadow:0 0 4cqw rgba(181,131,255,.6)}
+#rot{display:none;z-index:9;position:fixed}
+@media (orientation:landscape) and (max-height:500px){#rot{display:flex}}
+.hide{display:none!important}
+</style></head><body>
+<div id="f">
+<canvas id="cv"></canvas><i class="tt"></i><i class="tb"></i>
+<div id="top"><b>博士 · 第 2 章</b><span>狹窄商道前進</span></div>
+<div id="bar"><u id="bf"></u></div><div id="miss"></div>
+<div id="dlg"><b id="who">博士</b><p id="tx"></p></div>
+<div id="intro" class="ov"><h2>狹窄商道前進</h2>
+<p>夜裡的商道又窄又擠。<br>左右拖曳，帶著駱駝繞過貨物與行人；遇到岔路，對照右上角的地圖選路。</p>
+<div class="item">收到道具：紙本地圖（邊角缺損）<br><small>來自 牧羊人 第 1 章</small></div>
+<button id="go">出發</button></div>
+<div id="done" class="ov hide"><h2>走出商道了</h2>
+<p id="sum"></p>
+<div class="item">完整地圖<br><small>已送往【牧羊人】，將在第【3】章派上用場<br>（標出守衛與路線）</small></div>
+<button id="again">再走一次</button></div>
+<div id="rot" class="ov"><h2>請轉直向</h2></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),cv=$('cv'),x=cv.getContext('2d');
+const W=180,H=320,LEN=1500,PY=214,FK=[{d:430,ok:-1},{d:930,ok:1}];
+cv.width=W;cv.height=H;
+const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const hs=n=>{n=Math.sin(n*127.1)*43758.5;return n-Math.floor(n)};
+function bounds(d){let l=55,r=125;for(const f of FK){const a=f.d;
+ if(d>a-30&&d<a){const t=(d-a+30)/30;l=55-20*t;r=125+20*t}
+ else if(d>=a&&d<=a+140){l=35;r=145}
+ else if(d>a+140&&d<a+170){const t=(d-a-140)/30;l=35+20*t;r=145-20*t}}
+ return[l,r]}
+const inDiv=d=>FK.some(f=>d>f.d+10&&d<f.d+130);
+const inFork=(d,a,b)=>FK.some(f=>d>f.d-a&&d<f.d+b);
+const obs=[];
+for(let d=90;d<LEN-100;d+=60+rnd()*24){if(inFork(d,50,185))continue;
+ const k=rnd(),ty=k<.4?0:k<.75?1:2;obs.push({d,x:64+rnd()*52,w:[14,9,22][ty],ty,hit:0})}
+let st='intro',d=0,px=90,side=1,slow=0,miss=0,freeze=0,t=0,pend=0,tips={};
+const K={};
+const parts=[...Array(16)].map((_,i)=>({x:hs(i)*W,y:hs(i+9)*H,s:.4+hs(i+3)}));
+function say(w,s){$('who').textContent=w;$('tx').textContent=s}
+function reset(){d=0;px=90;side=1;slow=0;miss=0;freeze=0;tips={};obs.forEach(o=>o.hit=0);
+ st='play';$('intro').classList.add('hide');$('done').classList.add('hide');
+ say('博士','紙本地圖缺了一角，我順著星光補上去。')}
+$('go').onclick=reset;$('again').onclick=reset;
+say('博士','（對白為暫擬，正式版以原腳本為準）');
+let pressed=false,lx=0;
+cv.addEventListener('pointerdown',e=>{pressed=true;lx=e.clientX;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!pressed)return;pend+=(e.clientX-lx)*W/cv.getBoundingClientRect().width*1.25;lx=e.clientX});
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>pressed=false));
+addEventListener('keydown',e=>K[e.key]=1);addEventListener('keyup',e=>K[e.key]=0);
+const camelX=o=>cl(o.x+Math.sin(t*1.2+o.d)*12,55+o.w/2,125-o.w/2);
+function step(dt){t+=dt;if(st!=='play')return;
+ pend+=((K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0))*70*dt;
+ if(freeze>0){freeze-=dt}else{px+=pend;d+=48*(slow>0?.3:1)*dt}
+ pend=0;if(slow>0)slow-=dt;
+ const[l,r]=bounds(d);px=cl(px,l+4,r-4);
+ if(inDiv(d)){if(Math.abs(px-90)<9)px=side<0?81:99;else side=px<90?-1:1}else side=px<90?-1:1;
+ for(const f of FK){const gd=f.d+80;
+  if(d>=gd-4&&d<gd+8&&Math.sign(px-90)!==f.ok){d=f.d-8;px=90;freeze=.9;miss++;say('星光','這條是死路，退回岔口。對照右上角的地圖。')}}
+ for(const o of obs){if(!o.hit&&Math.abs(o.d-d)<7){const ox=o.ty==2?camelX(o):o.x;
+  if(Math.abs(ox-px)<o.w/2+3){o.hit=1;slow=.9;miss++;px+=px<ox?-7:7;say('博士','小心！貨物擋路，放慢腳步。')}}}
+ for(let i=0;i<FK.length;i++){if(!tips['f'+i]&&d>FK[i].d-90){tips['f'+i]=1;say('博士','前方有岔路。地圖上金色的線才是正確的路。')}}
+ if(!tips.m&&d>1180){tips.m=1;say('博士','快到了，商道的盡頭有星光。')}
+ $('bf').style.width=Math.min(100,d/LEN*100)+'%';$('miss').textContent='失誤 '+miss+' 次（不影響通關）';
+ if(d>=LEN){st='done';$('sum').textContent='帶著缺角的地圖穿過商道，我把星位補全了。共失誤 '+miss+' 次。';$('done').classList.remove('hide');say('博士','走出商道了，這份地圖交給牧羊人吧。')}}
+function R(a,b,w,h,c){x.fillStyle=c;x.fillRect(Math.round(a),Math.round(b),w,h)}
+function glow(cx,cy,r,c,a){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');
+ x.globalAlpha=a;x.globalCompositeOperation='lighter';x.fillStyle=g;x.fillRect(cx-r,cy-r,2*r,2*r);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
+function ln(a,b,c,e,col){const n=Math.max(Math.abs(c-a),Math.abs(e-b));for(let i=0;i<=n;i++)R(a+(c-a)*i/n,b+(e-b)*i/n,1,1,col)}
+const vg=document.createElement('canvas');vg.width=W;vg.height=H;
+{const c=vg.getContext('2d'),g=c.createRadialGradient(90,170,50,90,170,220);g.addColorStop(0,'rgba(5,4,15,0)');g.addColorStop(1,'rgba(5,4,15,.8)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+function sy(od){return PY-(od-d)}
+function draw(){
+ x.fillStyle='#14102a';x.fillRect(0,0,W,H);
+ for(let y=0;y<H;y++){const dd=d+(PY-y),[l,r]=bounds(dd),row=Math.floor(dd/4),m=((dd%4)+4)%4<1,o=row&1;
+  x.fillStyle=m?'#2e2538':(o?'#3b3148':'#42374f');x.fillRect(Math.round(l),y,Math.round(r-l),1);
+  x.fillStyle='#2e2538';for(let a=Math.ceil(l)+(o?4:0);a<r;a+=9)x.fillRect(a,y,1,1);
+  x.fillStyle=m?'#120f24':'#1b1730';x.fillRect(0,y,Math.round(l),1);x.fillRect(Math.round(r),y,W,1);
+  if(!m){x.fillStyle='#262040';for(let a=o*5;a<l;a+=10)x.fillRect(a,y,1,1);for(let a=Math.ceil(r)+o*5;a<W;a+=10)x.fillRect(a,y,1,1)}
+  x.fillStyle='#6a5a8a';x.fillRect(Math.round(l)-1,y,1,1);x.fillRect(Math.round(r),y,1,1);
+  for(const f of FK){const gd=f.d+80;if(dd>gd+10&&dd<f.d+132){x.fillStyle='#1b1730';x.fillRect(f.ok<0?91:35,y,f.ok<0?54:56,1)}}
+  if(inDiv(dd)){x.fillStyle=m?'#120f24':'#1b1730';x.fillRect(85,y,10,1);x.fillStyle='#4a3e66';x.fillRect(85,y,1,1)}}
+ for(let k=0;k<14;k++){const sd=40+k*115,yy=sy(sd);if(yy<-30||yy>H+30||inFork(sd,40,170))continue;
+  const[l,r]=bounds(sd),left=k&1,w=22,a=left?l-w-2:r+2;
+  R(a,yy,w,14,'#3a2850');for(let i=0;i<w;i+=4)R(a+i,yy-4,4,5,(i/4+k)&1?'#b583ff':'#ffb347');
+  R(a+2,yy+4,3,4,'#a35a3a');R(a+8,yy+5,3,3,'#e8c9a0');R(a+14,yy+4,4,4,'#a35a3a')}
+ for(const f of FK){
+  const gd=f.d+80,gy=sy(gd),gx=f.ok<0?91:36,gw=f.ok<0?53:49;
+  if(gy>-20&&gy<H+20){for(let i=0;i<gw;i+=8){R(gx+i,gy,7,10,'#6b4a2a');R(gx+i,gy,7,2,'#8e6a3e');R(gx+i+2,gy+4,3,1,'#3d2a16')}}
+  const py=sy(f.d+8);if(py>-12&&py<H+12){R(89,py-6,2,10,'#8a6a3a');R(84,py-8,6,3,'#c9a06a');R(90,py-5,6,3,'#c9a06a')}}
+ for(let k=0;k<16;k++){const ld=60+k*100,yy=sy(ld);if(yy<-30||yy>H+30)continue;
+  const[l,r]=bounds(ld),px0=(k&1)?r-3:l+2;R(px0,yy,2,4,'#2a2236');R(px0,yy-2,2,2,'#ffd27a');glow(px0+1,yy-1,34,'#ffb347',.38)}
+ for(const o of obs){const yy=sy(o.d);if(yy<-20||yy>H+20)continue;const ox=o.ty==2?camelX(o):o.x,a=ox-o.w/2;
+  if(o.ty==0){R(a,yy-5,o.w,10,'#7a5530');R(a,yy-5,o.w,2,'#9a7040');R(a+o.w/2-1,yy-5,2,10,'#4d331b')}
+  else if(o.ty==1){R(a,yy-6,o.w,12,'#a35a3a');R(a+1,yy-8,o.w-2,3,'#c47a52');R(a+2,yy-4,2,6,'#d89a72')}
+  else{R(a,yy-3,o.w,7,'#c9a06a');R(a+8,yy-6,6,4,'#d8b27c');R(a+1,yy+4,2,3,'#9c7a4a');R(a+o.w-3,yy+4,2,3,'#9c7a4a');R(a+o.w-3,yy-6,3,3,'#b8905a');R(a+4,yy-8,3,5,'#ffb347');glow(a+5,yy-6,18,'#ffb347',.45)}}
+ const fx=px,mv=freeze<=0?Math.floor(t*6)&1:0;
+ R(fx-4,PY+6,9,2,'rgba(0,0,0,.45)');
+ R(fx-4,PY-4,8,11,'#6a3fb0');R(fx-4,PY+4,8,3,'#4c2a86');R(fx-3,PY-3,6,3,'#8a5fd0');
+ R(fx-3+mv*2,PY+7,2,2,'#2a1a44');R(fx+1-mv*2,PY+7,2,2,'#2a1a44');
+ R(fx-3,PY-9,6,5,'#3a2a22');R(fx-3,PY-11,6,2,'#ffd27a');R(fx-3,PY-12,1,1,'#ffd27a');R(fx+2,PY-12,1,1,'#ffd27a');R(fx,PY-12,1,1,'#fff2c0');
+ R(fx+5,PY-8,1,15,'#c8a060');R(fx+4,PY-10,3,3,'#ffe9a0');
+ glow(fx+5,PY-9,16,'#ffe9a0',.5);glow(fx,PY,26,'#b583ff',.28);
+ glow(90,36,30+Math.sin(t*3)*4,'#fff2c0',.55);R(89,30,2,12,'#fff6d6');R(84,35,12,2,'#fff6d6');R(89,35,2,2,'#fff');
+ for(const p of parts){p.y-=p.s*.18;p.x+=Math.sin(t+p.s*9)*.1;if(p.y<0){p.y=H;p.x=hs(p.s*50+t)*W}
+  x.globalAlpha=.55;R(p.x,p.y,1,1,'#ffd27a');x.globalAlpha=1}
+ x.drawImage(vg,0,0);
+ if(slow>.7){x.fillStyle='rgba(255,220,255,.14)';x.fillRect(0,0,W,H)}
+ const ox=138,oy=32;R(ox,oy,36,50,'#d8c08a');R(ox,oy,36,1,'#8a6a3a');R(ox,oy+49,36,1,'#8a6a3a');R(ox,oy,1,50,'#8a6a3a');R(ox+35,oy,1,50,'#8a6a3a');
+ for(let i=0;i<6;i++)R(ox+30+i,oy+1,6-i,5-i,'#14102a');
+ const P=(a,b)=>[ox+a,oy+b],S=(a,b,c,e,col)=>{const p=P(a,b),q=P(c,e);ln(p[0],p[1],q[0],q[1],col)};
+ const dim='#7a6440',gold='#e08a00';
+ S(18,46,18,36,dim);S(18,20,18,16,dim);S(18,36,27,33,dim);S(18,16,9,13,dim);
+ S(18,36,9,32,gold);S(9,32,9,24,gold);S(9,24,18,20,gold);S(18,16,27,12,gold);S(27,12,27,6,gold);S(27,6,18,3,gold);
+ R(ox+27,oy+32,2,2,'#a02020');R(ox+8,oy+12,2,2,'#a02020');R(ox+17,oy+2,3,3,'#7a2ad0');
+ let mx=18,my=46-43*d/LEN;
+ FK.forEach(f=>{const s=cl((d-f.d)/140,0,1);mx+=(px<90?-9:9)*Math.sin(Math.PI*s)*(s>0&&s<1?1:0)});
+ R(ox+mx-1,oy+my-1,3,3,'#b583ff');R(ox+mx,oy+my,1,1,'#fff')}
+let last=performance.now();
+(function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;step(dt);draw();requestAnimationFrame(loop)})(last);
+</script></body></html>
