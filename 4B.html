@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>天使 第4章｜沿線描圖</title>
+<style>
+:root{--bg:#0b0a1a;--c:#8fd8ff;--g:#ffb347;--tx:#eef9ff;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0a1a}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#05040d;overflow:hidden;overscroll-behavior:none;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--tx)}
+body{display:grid;place-items:center}
+#f{position:relative;width:min(100vw,100dvh*9/16);aspect-ratio:9/16;container-type:inline-size;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.tt,.tb{position:absolute;left:0;right:0;pointer-events:none;backdrop-filter:blur(1.6px);-webkit-backdrop-filter:blur(1.6px)}
+.tt{top:0;height:10%;-webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent)}
+.tb{bottom:0;height:24%;-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
+#top{position:absolute;top:0;left:0;right:0;padding:2.4cqw 4cqw;background:linear-gradient(rgba(11,10,26,.85),rgba(11,10,26,0));font-size:3.6cqw;display:flex;gap:2cqw;align-items:baseline}
+#top b{color:var(--c);letter-spacing:.3cqw}#top span{opacity:.85}
+#bar{position:absolute;top:9cqw;left:4cqw;width:46cqw;height:1.6cqw;border-radius:2cqw;background:rgba(255,255,255,.12);overflow:hidden}
+#bf{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c),var(--g))}
+#miss{position:absolute;top:12.5cqw;left:4cqw;font-size:3cqw;opacity:.7}
+#dlg{position:absolute;left:3.5cqw;right:3.5cqw;bottom:3.5cqw;min-height:22cqw;padding:3cqw 3.8cqw;border:.5cqw solid var(--c);border-radius:3cqw;background:rgba(11,10,26,.82);box-shadow:0 0 5cqw rgba(143,216,255,.3)}
+#dlg b{display:block;font-size:3.2cqw;color:var(--c);margin-bottom:1cqw}
+#dlg p{margin:0;font-size:4cqw;line-height:1.5}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;background:rgba(11,10,26,.9);text-align:center}
+.ov h2{margin:0;font-size:6cqw;color:var(--c)}
+.ov p{margin:0;font-size:3.8cqw;line-height:1.65;opacity:.92}
+.item{border:.6cqw dashed var(--g);border-radius:2.5cqw;padding:3cqw 4cqw;color:var(--g);font-size:3.8cqw;line-height:1.5;background:rgba(255,179,71,.07);animation:fl 2.4s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-1.4cqw)}}
+button{font:inherit;min-height:44px;padding:2.4cqw 9cqw;font-size:4.2cqw;color:#06222e;background:var(--c);border:0;border-radius:6cqw;box-shadow:0 0 4cqw rgba(143,216,255,.55)}
+#rot{display:none;z-index:9;position:fixed}
+@media (orientation:landscape) and (max-height:500px){#rot{display:flex}}
+.hide{display:none!important}
+</style></head><body>
+<div id="f">
+<canvas id="cv"></canvas><i class="tt"></i><i class="tb"></i>
+<div id="top"><b>天使 · 第 4 章</b><span>沿線描圖</span></div>
+<div id="bar"><u id="bf"></u></div><div id="miss"></div>
+<div id="dlg"><b id="who">天使</b><p id="tx"></p></div>
+<div id="intro" class="ov"><h2>沿線描圖</h2>
+<p>從高處俯瞰夜裡的小城。<br>按住天使的光，沿著發亮的路線一路拖到廣場；偏離太遠會退回上一個檢查點。<br>抵達後，找出掛著相同記號的馬廄。</p>
+<div class="item">收到道具：馬廄辨識記號<br><small>來自 牧羊人 第 3 章</small></div>
+<button id="go">出發</button></div>
+<div id="done" class="ov hide"><h2>找到馬廄了</h2>
+<p id="sum"></p>
+<div class="item">馬廄位置卡（暫定名稱）<br><small>去向與用途<br>請對照原文件確認</small></div>
+<button id="again">再玩一次</button></div>
+<div id="rot" class="ov"><h2>請轉直向</h2></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),cv=$('cv'),x=cv.getContext('2d');
+const W=180,H=320;cv.width=W;cv.height=H;
+const hs=n=>{n=Math.sin(n*127.1)*43758.5;return n-Math.floor(n)};
+const KP=[[24,232],[60,226],[112,220],[152,202],[140,176],[94,168],[48,158],[32,136],[62,122],[90,112]];
+const PX=[],PYs=[];
+{const P=[KP[0],...KP,KP[KP.length-1]];
+ for(let i=1;i<P.length-2;i++){for(let k=0;k<30;k++){const u=k/30,u2=u*u,u3=u2*u,f=(a,b,c,d)=>.5*((2*b)+(-a+c)*u+(2*a-5*b+4*c-d)*u2+(-a+3*b-3*c+d)*u3);
+  PX.push(f(P[i-1][0],P[i][0],P[i+1][0],P[i+2][0]));PYs.push(f(P[i-1][1],P[i][1],P[i+1][1],P[i+2][1]))}}}
+const N=PX.length,CP=[Math.floor(N*.34),Math.floor(N*.67)];
+const GL=[['...#...','...#...','.#####.','#######','.#####.','..#.#..','.#...#.'],['...#...','..###..','..#.#..','.#####.','.#...#.','#######','.......'],['..###..','.#...#.','#..#..#','#.###.#','#..#..#','.#...#.','..###..']];
+const SX=[30,90,150],SY=62;
+function glyph(k,cx,cy,u,c){x.fillStyle=c;GL[k].forEach((r,j)=>{for(let i=0;i<7;i++)if(r[i]==='#')x.fillRect(Math.round(cx-3.5*u+i*u),Math.round(cy-3.5*u+j*u),u,u)})}
+let st='intro',ci=0,grab=false,stun=0,miss=0,mark=0,ans=0,gl=[0,1,2],wrong=[0,0,0],t=0,fin=0,cpPass=[0,0],flash=0;
+function say(w,s){$('who').textContent=w;$('tx').textContent=s}
+function reset(){ci=0;grab=false;stun=0;miss=0;cpPass=[0,0];wrong=[0,0,0];mark=Math.floor(Math.random()*3);ans=Math.floor(Math.random()*3);{const o=[0,1,2].filter(g=>g!==mark);let k=0;gl=[0,1,2].map(i=>i===ans?mark:o[k++])}fin=0;st='trace';
+ $('intro').classList.add('hide');$('done').classList.add('hide');upd();say('天使','按住我的光，沿著路線走。')}
+function upd(){$('bf').style.width=Math.min(100,ci/(N-1)*100)+'%';$('miss').textContent='失誤 '+miss+' 次（不影響通關）'}
+$('go').onclick=reset;$('again').onclick=reset;say('天使','（對白為暫擬，正式版以原腳本為準）');
+function pt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
+cv.addEventListener('pointerdown',e=>{const[px,py]=pt(e);
+ if(st==='trace'&&stun<=0&&Math.hypot(px-PX[ci],py-PYs[ci])<24){grab=true;cv.setPointerCapture(e.pointerId)}
+ else if(st==='pick'){for(let i=0;i<3;i++)if(Math.abs(px-SX[i])<21&&py>SY-20&&py<SY+18){
+   if(i===ans){st='fin';fin=0;say('天使','就是這裡。星光照著他們。')}
+   else{miss++;wrong[i]=1.1;say('天使','這裡的記號不一樣，再對照一次。');upd()}}}});
+cv.addEventListener('pointermove',e=>{if(!grab||st!=='trace')return;const[px,py]=pt(e);
+ let bi=-1,bd=1e9;for(let i=Math.max(0,ci-10);i<Math.min(N,ci+26);i++){const d=Math.hypot(px-PX[i],py-PYs[i]);if(d<bd){bd=d;bi=i}}
+ if(bd<15)ci=Math.max(ci,bi-0);
+ else if(Math.hypot(px-PX[ci],py-PYs[ci])>28){grab=false;stun=.8;flash=.4;miss++;const back=cpPass[1]?CP[1]:cpPass[0]?CP[0]:0;ci=back;say('天使','光飄離了路線，回到上一個檢查點。')}
+ for(let k=0;k<2;k++)if(!cpPass[k]&&ci>=CP[k]){cpPass[k]=1;say('天使','通過檢查點。繼續沿著光走。')}
+ if(ci>=N-3){ci=N-1;grab=false;st='pick';say('天使','抵達廣場了。找出和手上記號相同的馬廄。')}
+ upd()});
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>grab=false));
+function step(dt){t+=dt;if(stun>0)stun-=dt;if(flash>0)flash-=dt;wrong=wrong.map(v=>Math.max(0,v-dt));
+ if(st==='fin'){fin+=dt;if(fin>1.8){st='done';$('sum').textContent='循著星光找到了掛著記號的馬廄。共失誤 '+miss+' 次。';$('done').classList.remove('hide');say('天使','位置已記下。')}}}
+function R(a,b,w,h,c){x.fillStyle=c;x.fillRect(Math.round(a),Math.round(b),w,h)}
+function glow(cx,cy,r,c,a){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');
+ x.globalAlpha=a;x.globalCompositeOperation='lighter';x.fillStyle=g;x.fillRect(cx-r,cy-r,2*r,2*r);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
+const bg=document.createElement('canvas');bg.width=W;bg.height=H;
+{const c=bg.getContext('2d'),g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0e0c26');g.addColorStop(1,'#1a1740');c.fillStyle=g;c.fillRect(0,0,W,H);
+ const near=(a,b,m)=>{for(let i=0;i<N;i+=4)if(Math.hypot(a-PX[i],b-PYs[i])<m)return 1;return 0};
+ c.fillStyle='#2a2238';for(let i=0;i<N;i++)c.fillRect(Math.round(PX[i])-6,Math.round(PYs[i])-6,13,13);
+ c.fillStyle='#3a3048';for(let i=0;i<N;i++)c.fillRect(Math.round(PX[i])-4,Math.round(PYs[i])-4,9,9);
+ for(let i=0;i<46;i++){const a=8+hs(i)*160,b=100+hs(i+30)*170,w=14+Math.floor(hs(i+5)*14),h=12+Math.floor(hs(i+8)*12);
+  if(b>238||near(a+w/2,b+h/2,w/2+14)||(b<110&&a>60&&a<120))continue;
+  c.fillStyle='#14102a';c.fillRect(a+2,b+2,w,h);c.fillStyle=hs(i+2)>.5?'#2a2640':'#322c4c';c.fillRect(a,b,w,h);c.fillStyle='#403a60';c.fillRect(a,b,w,2);
+  if(hs(i+11)>.5){c.fillStyle='#ffb347';c.fillRect(a+3,b+4,2,2)}}
+ c.fillStyle='#12102a';c.fillRect(0,90,W,3);c.fillStyle='#2a2238';c.fillRect(56,92,68,26);c.fillStyle='#3a3048';c.fillRect(58,94,64,22)}
+const vg=document.createElement('canvas');vg.width=W;vg.height=H;
+{const c=vg.getContext('2d'),g=c.createRadialGradient(90,150,50,90,150,220);g.addColorStop(0,'rgba(5,4,15,0)');g.addColorStop(1,'rgba(5,4,15,.78)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+function stable(i){const cx=SX[i],lit=st==='pick'||st==='fin'||st==='done';
+ R(cx-18,SY-6,36,22,'#14102a');R(cx-20,SY-18,40,14,'#6b4a2a');R(cx-20,SY-18,40,3,'#8e6a3e');for(let a=-18;a<18;a+=5)R(cx+a,SY-14,1,9,'#4a3320');
+ R(cx-8,SY-4,16,20,'#0b0a1a');if(lit)R(cx-6,SY,12,16,'rgba(255,179,71,.25)');
+ R(cx-8,SY-26,16,8,'#4a3a60');R(cx-7,SY-25,14,6,'#d8c9a0');glyph(gl[i],cx,SY-22,1,'#3a2410');
+ if(lit)glow(cx,SY+4,28,'#ffb347',.3+(st!=='pick'?0:.1*Math.sin(t*3+i)));
+ if(wrong[i]>0){x.globalAlpha=Math.min(1,wrong[i]);R(cx-20,SY-26,40,44,'rgba(255,120,150,.3)');x.globalAlpha=1}
+ if(st==='fin'&&i===ans){glow(cx,SY,50+Math.sin(t*5)*5,'#ffe9a0',.55);R(cx-1,SY-60,2,40,'rgba(255,246,214,.7)')}}
+function draw(){
+ x.drawImage(bg,0,0);
+ for(let i=0;i<N;i+=5){const on=i<=ci;x.globalAlpha=on?1:.35+.25*Math.sin(t*4-i*.2);R(PX[i],PYs[i],2,2,on?'#8fd8ff':'#6a8aa8');if(on)glow(PX[i],PYs[i],6,'#8fd8ff',.35);x.globalAlpha=1}
+ for(let k=0;k<2;k++){const i=CP[k];R(PX[i]-3,PYs[i]-3,7,7,cpPass[k]?'#ffe9a0':'#6a8aa8');R(PX[i]-2,PYs[i]-2,5,5,'#14102a');R(PX[i],PYs[i],1,1,cpPass[k]?'#fff':'#6a8aa8')}
+ R(PX[0]-3,PYs[0]-3,7,7,'#6a8aa8');R(PX[0]-2,PYs[0]-2,5,5,'#14102a');
+ for(let i=0;i<3;i++)stable(i);
+ const ax=PX[ci],ay=PYs[ci]+Math.sin(t*3)*1.5,dim=stun>0?.4:1;
+ if(st==='trace'&&!grab&&stun<=0){const r=10+Math.sin(t*5)*3;x.globalAlpha=.6;for(let a=0;a<12;a++)R(ax+Math.cos(a*.5236)*r,ay+Math.sin(a*.5236)*r,1,1,'#fff');x.globalAlpha=1}
+ x.globalAlpha=dim;
+ R(ax-8,ay-3,6,3,'#bfeaff');R(ax+3,ay-3,6,3,'#bfeaff');R(ax-6,ay-5,3,2,'#e8f8ff');R(ax+4,ay-5,3,2,'#e8f8ff');
+ R(ax-2,ay-4,5,8,'#f2fbff');R(ax-1,ay-7,3,3,'#ffe9d0');R(ax-2,ay-9,5,1,'#ffe9a0');
+ glow(ax,ay,22,'#8fd8ff',.55);x.globalAlpha=1;
+ for(let k=0;k<14;k++){const px=(hs(k)*W+Math.sin(t+k)*6),py=(hs(k+7)*H-t*6*(.4+hs(k+2))+H*3)%H;x.globalAlpha=.3+.3*Math.sin(t*2+k);R(px,py,1,1,'#cfeeff');x.globalAlpha=1}
+ x.drawImage(vg,0,0);
+ if(flash>0){x.fillStyle='rgba(255,200,220,'+flash*.3+')';x.fillRect(0,0,W,H)}
+ R(138,26,38,38,'rgba(11,10,26,.75)');R(138,26,38,1,'#8fd8ff');R(138,63,38,1,'#8fd8ff');R(138,26,1,38,'#8fd8ff');R(175,26,1,38,'#8fd8ff');
+ glyph(mark,157,44,3,'#ffe9a0');x.fillStyle='#cfeeff';x.font='bold 6px sans-serif';x.textBaseline='middle';x.fillText('馬廄記號',141,31)}
+let last=performance.now();
+(function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;step(dt);draw();requestAnimationFrame(loop)})(last);
+</script></body></html>

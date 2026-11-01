@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>博士 第4章｜寶箱配對</title>
+<style>
+:root{--bg:#0b0a1a;--c:#b583ff;--g:#ffb347;--tx:#f3eaff;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0a1a}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#05040d;overflow:hidden;overscroll-behavior:none;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--tx)}
+body{display:grid;place-items:center}
+#f{position:relative;width:min(100vw,100dvh*9/16);aspect-ratio:9/16;container-type:inline-size;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.tt,.tb{position:absolute;left:0;right:0;pointer-events:none;backdrop-filter:blur(1.6px);-webkit-backdrop-filter:blur(1.6px)}
+.tt{top:0;height:10%;-webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent)}
+.tb{bottom:0;height:24%;-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
+#top{position:absolute;top:0;left:0;right:0;padding:2.4cqw 4cqw;background:linear-gradient(rgba(11,10,26,.85),rgba(11,10,26,0));font-size:3.6cqw;display:flex;gap:2cqw;align-items:baseline}
+#top b{color:var(--c);letter-spacing:.3cqw}#top span{opacity:.85}
+#miss{position:absolute;top:9cqw;right:4cqw;font-size:3cqw;opacity:.7}
+#dlg{position:absolute;left:3.5cqw;right:3.5cqw;bottom:3.5cqw;min-height:22cqw;padding:3cqw 3.8cqw;border:.5cqw solid var(--c);border-radius:3cqw;background:rgba(11,10,26,.82);box-shadow:0 0 5cqw rgba(181,131,255,.35)}
+#dlg b{display:block;font-size:3.2cqw;color:var(--c);margin-bottom:1cqw}
+#dlg p{margin:0;font-size:4cqw;line-height:1.5}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;background:rgba(11,10,26,.9);text-align:center}
+.ov h2{margin:0;font-size:6cqw;color:var(--c)}
+.ov p{margin:0;font-size:3.8cqw;line-height:1.65;opacity:.92}
+.item{border:.6cqw dashed var(--g);border-radius:2.5cqw;padding:3cqw 4cqw;color:var(--g);font-size:3.8cqw;line-height:1.5;background:rgba(255,179,71,.07);animation:fl 2.4s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-1.4cqw)}}
+button{font:inherit;min-height:44px;padding:2.4cqw 9cqw;font-size:4.2cqw;color:#150d28;background:var(--c);border:0;border-radius:6cqw;box-shadow:0 0 4cqw rgba(181,131,255,.6)}
+#rot{display:none;z-index:9;position:fixed}
+@media (orientation:landscape) and (max-height:500px){#rot{display:flex}}
+.hide{display:none!important}
+</style></head><body>
+<div id="f">
+<canvas id="cv"></canvas><i class="tt"></i><i class="tb"></i>
+<div id="top"><b>博士 · 第 4 章</b><span>寶箱配對</span></div>
+<div id="miss"></div>
+<div id="dlg"><b id="who">博士</b><p id="tx"></p></div>
+<div id="intro" class="ov"><h2>寶箱配對</h2>
+<p>翻開兩張牌，找出一對相同的物品。<br>黃金、乳香、沒藥配對成功後，會裝進獻禮寶箱；其他是裝飾品。<br>開始時會先讓你偷看幾秒。</p>
+<div class="item">收到道具：黃金、乳香、沒藥<br><small>來自 博士 第 3 章（自留）</small></div>
+<button id="go">開始</button></div>
+<div id="done" class="ov hide"><h2>獻禮備齊了</h2>
+<p id="sum"></p>
+<div class="item">精緻獻禮寶箱<br><small>去向與用途<br>請對照原文件確認</small></div>
+<button id="again">再玩一次</button></div>
+<div id="rot" class="ov"><h2>請轉直向</h2></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),cv=$('cv'),x=cv.getContext('2d');
+const W=180,H=320;cv.width=W;cv.height=H;
+const hs=n=>{n=Math.sin(n*127.1)*43758.5;return n-Math.floor(n)};
+const NAMES=['黃金','乳香','沒藥','星星','皇冠','油燈'];
+const SP=[
+ [[0,7,12,4,'#c8901a'],[1,8,10,1,'#ffe27a'],[2,3,8,4,'#e8b030'],[3,4,6,1,'#fff0a0'],[4,0,4,3,'#ffd050']],
+ [[1,8,10,3,'#8a6a3a'],[2,5,3,3,'#f2ead0'],[6,4,3,4,'#fff6e0'],[4,6,3,2,'#e8dcb8'],[5,1,1,2,'#cfc8e8'],[6,0,1,1,'#cfc8e8']],
+ [[3,2,6,2,'#6a2a2a'],[2,4,8,7,'#8a3a3a'],[3,5,2,4,'#b05a5a'],[5,0,2,2,'#3a1a1a']],
+ [[5,0,2,12,'#ffe27a'],[0,5,12,2,'#ffe27a'],[3,3,6,6,'#fff2c0']],
+ [[1,5,10,5,'#ffd27a'],[1,2,2,4,'#ffd27a'],[5,1,2,5,'#ffd27a'],[9,2,2,4,'#ffd27a'],[3,7,2,2,'#c03030'],[7,7,2,2,'#3060c0']],
+ [[3,2,6,2,'#8a6a3a'],[2,4,8,6,'#c8a060'],[5,0,2,2,'#ffe27a'],[4,5,4,3,'#ffe27a'],[2,10,8,2,'#8a6a3a']]];
+function spr(ty,cx,cy,u){for(const r of SP[ty])x.fillStyle=r[4],x.fillRect(Math.round(cx-6*u+r[0]*u),Math.round(cy-6*u+r[1]*u),r[2]*u,r[3]*u)}
+let st='intro',cards=[],pick=[],lock=0,miss=0,pairs=0,t=0,peek=0,fly=[],sparks=[],chest=[0,0,0],lid=0,fin=0;
+const pos=i=>[16+(i%4)*38,104+Math.floor(i/4)*44];
+function say(w,s){$('who').textContent=w;$('tx').textContent=s}
+function reset(){const a=[0,1,2,3,4,5,0,1,2,3,4,5];for(let i=11;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+ cards=a.map(ty=>({ty,fl:1,tg:1,m:0}));pick=[];lock=0;miss=0;pairs=0;fly=[];sparks=[];chest=[0,0,0];lid=0;fin=0;peek=2.6;st='peek';
+ $('intro').classList.add('hide');$('done').classList.add('hide');$('miss').textContent='配對 0/6　失誤 0 次（不影響通關）';say('博士','先記住它們的位置。')}
+$('go').onclick=reset;$('again').onclick=reset;say('博士','（對白為暫擬，正式版以原腳本為準）');
+cv.addEventListener('pointerdown',e=>{if(st!=='play'||lock>0)return;const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*W/r.width,py=(e.clientY-r.top)*H/r.height;
+ for(let i=0;i<12;i++){const[a,b]=pos(i),c=cards[i];if(px>=a&&px<a+34&&py>=b&&py<b+40){if(c.m||c.tg===1)return;c.tg=1;pick.push(i);
+  if(pick.length===2){const[p,q]=pick,A=cards[p],B=cards[q];
+   if(A.ty===B.ty){lock=.6;setTimeout(()=>{A.m=B.m=1;pairs++;[p,q].forEach(k=>{const[kx,ky]=pos(k);for(let s=0;s<8;s++)sparks.push({x:kx+17,y:ky+20,a:s*.785,t:0})});
+     if(A.ty<3){const[kx,ky]=pos(p);fly.push({ty:A.ty,x0:kx+17,y0:ky+20,t:0});say('博士',NAMES[A.ty]+'配對成功，放進寶箱。')}else say('博士',NAMES[A.ty]+'是裝飾品，不放進寶箱。');
+     upd();pick=[]},450)}
+   else{lock=.9;miss++;say('博士','不一樣。記住它們的位置。');setTimeout(()=>{A.tg=0;B.tg=0;pick=[];upd()},800)}}
+  upd();return}}});
+function upd(){$('miss').textContent='配對 '+pairs+'/6　失誤 '+miss+' 次（不影響通關）'}
+function step(dt){t+=dt;
+ if(st==='peek'){peek-=dt;if(peek<=0){cards.forEach(c=>c.tg=0);st='play';say('博士','翻開兩張牌，找出相同的物品。')}}
+ if(lock>0)lock-=dt;
+ for(const c of cards){const d=c.tg-c.fl;c.fl+=Math.sign(d)*Math.min(Math.abs(d),dt*5)}
+ for(const f of fly){f.t+=dt;if(!f.in&&f.t>=.6){f.in=1;chest[f.ty]=1}}fly=fly.filter(f=>f.t<.6);
+ sparks.forEach(s=>s.t+=dt);sparks=sparks.filter(s=>s.t<.6);
+ if(st==='play'&&pairs===6&&!fly.length&&lock<=0){st='fin';fin=0}
+ if(st==='fin'){fin+=dt;lid=Math.min(1,fin/1);if(fin>1.9){st='done';$('sum').textContent='三份獻禮都裝進寶箱了。共失誤 '+miss+' 次。';$('done').classList.remove('hide');say('博士','獻禮都備妥了。')}}}
+function R(a,b,w,h,c){x.fillStyle=c;x.fillRect(Math.round(a),Math.round(b),w,h)}
+function glow(cx,cy,r,c,a){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');
+ x.globalAlpha=a;x.globalCompositeOperation='lighter';x.fillStyle=g;x.fillRect(cx-r,cy-r,2*r,2*r);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
+const bg=document.createElement('canvas');bg.width=W;bg.height=H;
+{const c=bg.getContext('2d'),g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1c1438');g.addColorStop(1,'#2a1a40');c.fillStyle=g;c.fillRect(0,0,W,H);
+ for(let a=0;a<W;a+=22){c.fillStyle='rgba(181,131,255,.07)';c.fillRect(a,0,10,98)}
+ c.fillStyle='#3a1a30';c.fillRect(0,96,W,H-96);c.fillStyle='#c8902a';c.fillRect(6,98,W-12,2);c.fillRect(6,238,W-12,2);c.fillRect(6,98,2,142);c.fillRect(W-8,98,2,142);
+ for(let a=12;a<W-12;a+=10)for(let b=104;b<236;b+=10){c.fillStyle='rgba(255,179,71,.09)';c.fillRect(a,b,2,2)}}
+const vg=document.createElement('canvas');vg.width=W;vg.height=H;
+{const c=vg.getContext('2d'),g=c.createRadialGradient(90,150,50,90,150,220);g.addColorStop(0,'rgba(5,4,15,0)');g.addColorStop(1,'rgba(5,4,15,.75)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+function chestDraw(){const cx=60,cy=40;
+ glow(90,66,52,'#ffb347',.18+(st==='fin'||st==='done'?.25*lid:0));
+ const lh=Math.round(18-8*lid),ly=Math.round(38+18*lid);
+ R(cx,ly,60,lh,'#5a3a1e');R(cx,ly,60,2,'#8e6a3e');R(cx+8,ly,4,lh,'#c8902a');R(cx+48,ly,4,lh,'#c8902a');
+ R(cx,56,60,10,'#1a1020');R(cx,66,60,22,'#6b4a2a');R(cx,66,60,3,'#8e6a3e');R(cx+8,66,4,22,'#c8902a');R(cx+48,66,4,22,'#c8902a');R(cx+26,70,8,8,'#c8902a');R(cx+28,72,4,4,'#3a2410');
+ for(let i=0;i<3;i++){const ix=75+i*15;if(chest[i]){const b=Math.sin(t*3+i)*.8;spr(i,ix,62+b-(lid>0?lid*6:0),1);glow(ix,62,10,'#ffd27a',.4)}else{R(ix-5,60,10,5,'rgba(255,255,255,.07)')}}
+ if(lid>0)R(cx,ly+lh-1,60,1,'#ffe27a')}
+function doctor(){const fx=152,PY=84;R(fx-5,PY+6,11,2,'rgba(0,0,0,.5)');R(fx-4,PY-4,8,11,'#6a3fb0');R(fx-4,PY+4,8,3,'#4c2a86');R(fx-3,PY-3,6,3,'#8a5fd0');R(fx-3,PY+7,2,2,'#2a1a44');R(fx+1,PY+7,2,2,'#2a1a44');
+ R(fx-3,PY-9,6,5,'#e8c9a0');R(fx-3,PY-12,6,3,'#3a2a22');R(fx-3,PY-14,6,2,'#ffd27a');R(fx-3,PY-15,1,1,'#ffd27a');R(fx+2,PY-15,1,1,'#ffd27a');R(fx,PY-15,1,1,'#fff2c0');R(fx-2,PY-8,1,1,'#2a1a14');R(fx+1,PY-8,1,1,'#2a1a14');glow(fx,PY,22,'#b583ff',.25)}
+function draw(){
+ x.drawImage(bg,0,0);
+ glow(14,40,40,'#ffb347',.35);glow(166,40,40,'#ffb347',.35);R(12,30,4,8,'#8a6a3a');R(13,26,2,4,'#ffe27a');R(164,30,4,8,'#8a6a3a');R(165,26,2,4,'#ffe27a');
+ chestDraw();doctor();
+ for(let i=0;i<12;i++){const c=cards[i];if(!c)continue;const[a,b]=pos(i),sc=Math.abs(1-2*c.fl),w=Math.max(1,Math.round(34*sc)),ox=a+17-Math.round(w/2),face=c.fl>.5;
+  if(c.m){x.globalAlpha=.28}
+  if(face){R(ox,b,w,40,c.ty<3?'#c8902a':'#7a58b0');R(ox+1,b+1,Math.max(0,w-2),38,'#2a2240');if(w>20){spr(c.ty,a+17,b+20,2);if(c.ty<3&&!c.m)glow(a+17,b+20,16,'#ffd27a',.25)}}
+  else{R(ox,b,w,40,'#6a3fb0');R(ox+1,b+1,Math.max(0,w-2),38,'#4a2a86');if(w>16){R(a+16,b+12,2,16,'#b583ff');R(a+10,b+19,14,2,'#b583ff');R(a+14,b+17,6,6,'#d8c0ff')}}
+  x.globalAlpha=1}
+ for(const f of fly){const p=f.t/.6,sx=75+f.ty*15,sy=62,xx=f.x0+(sx-f.x0)*p,yy=f.y0+(sy-f.y0)*p-Math.sin(Math.PI*p)*20;spr(f.ty,xx,yy,2-p);glow(xx,yy,14,'#ffd27a',.5)}
+ for(const s of sparks){const a=1-s.t/.6,r=s.t*26;x.globalAlpha=a;R(s.x+Math.cos(s.a)*r,s.y+Math.sin(s.a)*r,2,2,'#ffe9a0');x.globalAlpha=1}
+ for(let k=0;k<12;k++){const px=(hs(k)*W+t*3*(.5+hs(k+4)))%W,py=100+(hs(k+7)*140-t*5*(.4+hs(k+2))+280)%140;x.globalAlpha=.35+.35*Math.sin(t*2+k);R(px,py,1,1,'#ffd27a');x.globalAlpha=1}
+ x.drawImage(vg,0,0)}
+let last=performance.now();
+(function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;step(dt);draw();requestAnimationFrame(loop)})(last);
+</script></body></html>

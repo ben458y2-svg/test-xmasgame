@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>博士 第1章｜星光辨識記錄</title>
+<style>
+:root{--bg:#0b0a1a;--c:#b583ff;--g:#ffb347;--tx:#f3eaff;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0a1a}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#05040d;overflow:hidden;overscroll-behavior:none;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--tx)}
+body{display:grid;place-items:center}
+#f{position:relative;width:min(100vw,100dvh*9/16);aspect-ratio:9/16;container-type:inline-size;background:var(--bg);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.tt,.tb{position:absolute;left:0;right:0;pointer-events:none;backdrop-filter:blur(1.6px);-webkit-backdrop-filter:blur(1.6px)}
+.tt{top:0;height:12%;-webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent)}
+.tb{bottom:0;height:26%;-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
+#top{position:absolute;top:0;left:0;right:0;padding:2.4cqw 4cqw;background:linear-gradient(rgba(11,10,26,.85),rgba(11,10,26,0));font-size:3.6cqw;display:flex;gap:2cqw;align-items:baseline}
+#top b{color:var(--c);letter-spacing:.3cqw}#top span{opacity:.85}
+#miss{position:absolute;top:9cqw;right:4cqw;font-size:3cqw;opacity:.7}
+#re{position:absolute;top:8cqw;left:4cqw;min-height:44px;padding:1.2cqw 4cqw;font-size:3.4cqw;border-radius:5cqw;color:var(--tx);background:rgba(11,10,26,.7);border:.4cqw solid var(--c);box-shadow:none}
+#dlg{position:absolute;left:3.5cqw;right:3.5cqw;bottom:3.5cqw;min-height:22cqw;padding:3cqw 3.8cqw;border:.5cqw solid var(--c);border-radius:3cqw;background:rgba(11,10,26,.82);box-shadow:0 0 5cqw rgba(181,131,255,.35)}
+#dlg b{display:block;font-size:3.2cqw;color:var(--c);margin-bottom:1cqw}
+#dlg p{margin:0;font-size:4cqw;line-height:1.5}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3.5cqw;padding:8cqw;background:rgba(11,10,26,.9);text-align:center}
+.ov h2{margin:0;font-size:6cqw;color:var(--c)}
+.ov p{margin:0;font-size:3.8cqw;line-height:1.65;opacity:.92}
+.item{border:.6cqw dashed var(--g);border-radius:2.5cqw;padding:3cqw 4cqw;color:var(--g);font-size:3.8cqw;line-height:1.5;background:rgba(255,179,71,.07);animation:fl 2.4s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-1.4cqw)}}
+button{font:inherit;min-height:44px;padding:2.4cqw 9cqw;font-size:4.2cqw;color:#150d28;background:var(--c);border:0;border-radius:6cqw;box-shadow:0 0 4cqw rgba(181,131,255,.6)}
+#rot{display:none;z-index:9;position:fixed}
+@media (orientation:landscape) and (max-height:500px){#rot{display:flex}}
+.hide{display:none!important}
+</style></head><body>
+<div id="f">
+<canvas id="cv"></canvas><i class="tt"></i><i class="tb"></i>
+<div id="top"><b>博士 · 第 1 章</b><span>星光辨識記錄</span></div>
+<button id="re" class="hide">再觀測一次</button><div id="miss"></div>
+<div id="dlg"><b id="who">博士</b><p id="tx"></p></div>
+<div id="intro" class="ov"><h2>星光辨識記錄</h2>
+<p>屋頂的夜空裡，有六顆星會依序亮起。<br>先仔細觀測，再照剛才亮起的順序，一顆一顆點下來記錄。<br>可以隨時再觀測，沒有時間限制。</p>
+<div class="item">任務：繪製星象方位圖</div>
+<button id="go">開始觀測</button></div>
+<div id="done" class="ov hide"><h2>星象記錄完成</h2>
+<p id="sum"></p>
+<div class="item">星象方位圖<br><small>已送往【天使】，將在第【2】章派上用場<br>（製作星光提示）</small></div>
+<button id="again">再記錄一次</button></div>
+<div id="rot" class="ov"><h2>請轉直向</h2></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),cv=$('cv'),x=cv.getContext('2d');
+const W=180,H=320;cv.width=W;cv.height=H;
+const hs=n=>{n=Math.sin(n*127.1)*43758.5;return n-Math.floor(n)};
+const C=[[40,70],[78,52],[118,64],[138,102],[98,126],[56,118]];
+const D=[[24,40],[100,36],[150,60],[20,100],[70,92],[160,130],[34,150],[120,160],[84,168]];
+const ALL=C.map((p,i)=>({x:p[0],y:p[1],i})).concat(D.map(p=>({x:p[0],y:p[1],i:-1})));
+const bgs=[...Array(46)].map((_,i)=>({x:hs(i+1)*W,y:24+hs(i+60)*190,s:hs(i+9)*6}));
+let st='intro',wt=0,rec=[],miss=0,consec=0,hint=0,shake=0,t=0,sparks=[],shoot=null,nextShoot=3;
+function say(w,s){$('who').textContent=w;$('tx').textContent=s}
+function watch(){st='watch';wt=0;rec=[];consec=0;$('re').classList.add('hide');$('intro').classList.add('hide');$('done').classList.add('hide');say('博士','仔細看，星星亮起的順序就是方位。')}
+$('go').onclick=()=>{miss=0;watch()};$('again').onclick=()=>{miss=0;watch()};$('re').onclick=watch;
+say('博士','（對白為暫擬，正式版以原腳本為準）');
+cv.addEventListener('pointerdown',e=>{if(st!=='rec')return;const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*W/r.width,py=(e.clientY-r.top)*H/r.height;
+ let best=null,bd=13;for(const s of ALL){const dd=Math.hypot(s.x-px,s.y-py);if(dd<bd){bd=dd;best=s}}
+ if(!best||rec.includes(best.i)&&best.i>=0)return;
+ if(best.i===rec.length){rec.push(best.i);consec=0;for(let k=0;k<8;k++)sparks.push({x:best.x,y:best.y,a:k*.785,t:0});
+  say('博士',rec.length<6?'記下第 '+rec.length+' 顆。下一顆是哪裡？':'六顆都記下了！')
+  if(rec.length===6){st='fin';wt=0}}
+ else{miss++;consec++;shake=.35;say('博士','這顆不是剛才亮起的那顆。再想想順序。');
+  if(consec>=2){hint=1.4;say('博士','（下一顆星輕輕閃了一下）')}}
+ $('miss').textContent='失誤 '+miss+' 次（不影響通關）'});
+function step(dt){t+=dt;
+ if(st==='watch'){wt+=dt;if(wt>6.9){st='rec';$('re').classList.remove('hide');say('博士','換我記錄：照剛才亮起的順序，點下星星。')}}
+ if(st==='fin'){wt+=dt;if(wt>1.6){st='done';$('sum').textContent='六顆星的方位都記進圖裡了。共失誤 '+miss+' 次。';$('done').classList.remove('hide');say('博士','星象圖完成，交給天使。')}}
+ if(hint>0)hint-=dt;if(shake>0)shake-=dt;
+ sparks.forEach(s=>s.t+=dt);sparks=sparks.filter(s=>s.t<.6);
+ nextShoot-=dt;if(nextShoot<=0&&!shoot){shoot={x:W+10,y:30+Math.random()*60,t:0};nextShoot=4+Math.random()*3}
+ if(shoot){shoot.t+=dt;shoot.x-=150*dt;shoot.y+=60*dt;if(shoot.x<-30)shoot=null}}
+function R(a,b,w,h,c){x.fillStyle=c;x.fillRect(Math.round(a),Math.round(b),w,h)}
+function glow(cx,cy,r,c,a){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');
+ x.globalAlpha=a;x.globalCompositeOperation='lighter';x.fillStyle=g;x.fillRect(cx-r,cy-r,2*r,2*r);x.globalAlpha=1;x.globalCompositeOperation='source-over'}
+function ln(a,b,c,e,col,al){x.globalAlpha=al;const n=Math.max(Math.abs(c-a),Math.abs(e-b));for(let i=0;i<=n;i++)R(a+(c-a)*i/n,b+(e-b)*i/n,1,1,col);x.globalAlpha=1}
+function star(sx,sy,r,col){R(sx,sy-r,1,2*r+1,col);R(sx-r,sy,2*r+1,1,col);R(sx,sy,1,1,'#fff')}
+const bg=document.createElement('canvas');bg.width=W;bg.height=H;
+{const c=bg.getContext('2d'),g=c.createLinearGradient(0,0,0,240);g.addColorStop(0,'#05040f');g.addColorStop(.6,'#15123a');g.addColorStop(1,'#2d2552');c.fillStyle=g;c.fillRect(0,0,W,H);
+ for(let i=0;i<70;i++){const a=hs(i)*W,b=40+a*.7+(hs(i+5)-.5)*50;c.fillStyle='rgba(190,170,255,'+(.04+hs(i+8)*.05)+')';c.fillRect(a,b,6+hs(i+3)*8,4)}}
+const vg=document.createElement('canvas');vg.width=W;vg.height=H;
+{const c=vg.getContext('2d'),g=c.createRadialGradient(90,150,50,90,150,220);g.addColorStop(0,'rgba(5,4,15,0)');g.addColorStop(1,'rgba(5,4,15,.8)');c.fillStyle=g;c.fillRect(0,0,W,H)}
+function doctor(){const fx=34,PY=236,up=st==='watch'||st==='rec'?Math.sin(t*2)>0?1:0:0;
+ R(fx-5,PY+6,11,2,'rgba(0,0,0,.5)');R(fx-4,PY-4,8,11,'#6a3fb0');R(fx-4,PY+4,8,3,'#4c2a86');R(fx-3,PY-3,6,3,'#8a5fd0');
+ R(fx-3,PY+7,2,2,'#2a1a44');R(fx+1,PY+7,2,2,'#2a1a44');
+ R(fx-3,PY-9,6,5,'#3a2a22');R(fx-3,PY-11,6,2,'#ffd27a');R(fx-3,PY-12,1,1,'#ffd27a');R(fx+2,PY-12,1,1,'#ffd27a');R(fx,PY-12,1,1,'#fff2c0');
+ R(fx+4,PY-12-up,1,12,'#c8a060');R(fx+3,PY-14-up,3,2,'#ffe9a0');glow(fx+4,PY-13,10,'#ffe9a0',.5);glow(fx,PY,24,'#b583ff',.25)}
+function draw(){
+ x.drawImage(bg,0,0);
+ const sh=shake>0?(Math.floor(t*40)&1)*2-1:0;
+ for(const s of bgs){x.globalAlpha=.35+.65*Math.abs(Math.sin(t*1.2+s.s));R(s.x,s.y,1,1,'#fff6d6')}x.globalAlpha=1;
+ if(shoot){ln(shoot.x,shoot.y,shoot.x+16,shoot.y-6.4,'#fff6d6',.8);R(shoot.x,shoot.y,2,2,'#fff')}
+ for(const s of ALL){star(s.x+(s.i>=0&&s.i===rec.length&&shake>0?sh:0),s.y,2,'#d8d0ff');glow(s.x,s.y,8,'#b583ff',.25)}
+ const startT=i=>.6+i*.9;
+ if(st==='watch'){const fade=wt>5.9?Math.max(0,(6.9-wt)):1;
+  for(let i=1;i<6;i++){const p=Math.min(1,(wt-startT(i))/.5);if(p>0)ln(C[i-1][0],C[i-1][1],C[i-1][0]+(C[i][0]-C[i-1][0])*p,C[i-1][1]+(C[i][1]-C[i-1][1])*p,'#ffe9a0',.5*fade)}
+  for(let i=0;i<6;i++){const tt=wt-startT(i);if(tt>0&&tt<.8){const a=Math.sin(Math.PI*tt/.8);glow(C[i][0],C[i][1],10+22*a,'#ffd27a',.9*a);star(C[i][0],C[i][1],3+Math.round(3*a),'#fff2c0')}}}
+ if(st==='rec'||st==='fin'||st==='done'){
+  for(let i=1;i<rec.length;i++)ln(C[rec[i-1]][0],C[rec[i-1]][1],C[rec[i]][0],C[rec[i]][1],'#ffd27a',.9);
+  rec.forEach((k,n)=>{glow(C[k][0],C[k][1],14,'#ffd27a',.7);star(C[k][0],C[k][1],3,'#fff2c0')});
+  if(hint>0&&rec.length<6){const k=rec.length,a=Math.abs(Math.sin(hint*5));glow(C[k][0],C[k][1],10+10*a,'#b583ff',.8*a)}
+  if(st==='fin'){const a=Math.min(1,wt/.8);ln(C[5][0],C[5][1],C[0][0],C[0][1],'#ffd27a',.7*a);glow(90,95,80,'#ffd27a',.25*a)}}
+ for(const s of sparks){const a=1-s.t/.6,r=s.t*26;x.globalAlpha=a;R(s.x+Math.cos(s.a)*r,s.y+Math.sin(s.a)*r,2,2,'#ffe9a0');x.globalAlpha=1}
+ for(let a=0;a<W;a+=10){const h=6+Math.floor(hs(a)*16);R(a,232-h,10,h+8,'#14102a');if(hs(a+3)>.6)R(a+3,232-h+3,2,2,'#ffb347')}
+ for(let k=0;k<12;k++)R(104+k,222-Math.round(Math.sqrt(144-(k-6)*(k-6))*.9),1,3,'#1c1738');
+ R(0,240,W,80,'#2a2236');R(0,240,W,5,'#4a3e66');R(0,240,W,1,'#8a78b0');for(let a=0;a<W;a+=12)R(a,246+((a/12)&1)*6,1,6,'#201a2e');
+ for(let a=0;a<360;a+=20)R(66+Math.cos(a*.0175)*7,235+Math.sin(a*.0175)*7,1,1,'#d8a850');R(66,228,1,14,'#d8a850');R(59,235,14,1,'#d8a850');glow(66,235,16,'#ffb347',.25);
+ doctor();
+ glow(150,240,60,'#ffb347',.12);
+ x.drawImage(vg,0,0);
+ const ox=100,oy=196,pw=72,ph=46;R(ox,oy,pw,ph,'#d8c08a');R(ox,oy,pw,1,'#8a6a3a');R(ox,oy+ph-1,pw,1,'#8a6a3a');R(ox,oy,1,ph,'#8a6a3a');R(ox+pw-1,oy,1,ph,'#8a6a3a');
+ for(let a=6;a<pw-4;a+=8)for(let b=5;b<ph-3;b+=8)R(ox+a,oy+b,1,1,'#b8a070');
+ const mp=k=>[ox+6+(C[k][0]-40)*.6,oy+6+(C[k][1]-52)*.45];
+ for(let i=1;i<rec.length;i++){const a=mp(rec[i-1]),b=mp(rec[i]);ln(a[0],a[1],b[0],b[1],'#a05a00',1)}
+ if(st==='fin'||st==='done'){const a=mp(5),b=mp(0);ln(a[0],a[1],b[0],b[1],'#a05a00',1)}
+ rec.forEach(k=>{const p=mp(k);R(p[0]-1,p[1]-1,3,3,'#7a2ad0');R(p[0],p[1],1,1,'#fff')});
+ if(rec.length<6)for(let k=rec.length;k<6;k++){const p=mp(k);R(p[0],p[1],1,1,'#8a6a3a')}
+ R(ox,oy-8,pw,8,'rgba(11,10,26,.7)');x.fillStyle='#e8d8ff';x.font='bold 6px sans-serif';x.textBaseline='middle';x.fillText('星象方位圖  '+rec.length+'/6',ox+3,oy-4)}
+let last=performance.now();
+(function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;step(dt);draw();requestAnimationFrame(loop)})(last);
+</script></body></html>
